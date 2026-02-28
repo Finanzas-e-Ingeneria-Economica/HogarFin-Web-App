@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import ClientCard from "./_components/ClientCard";
+import ClientModal from "./_components/ClientModal";
+import DeleteClientModal from "./_components/DeleteClientModal";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 
-type ClientRow = {
+export type ClientRow = {
   id: number;
+  user_id: string;
   dni: string;
   names: string;
   last_names: string;
+  monthly_income: number | null;
+  monthly_expenses: number;
+  dependents: number;
   email: string | null;
   phone: string | null;
   residence_location: string | null;
@@ -17,231 +22,292 @@ type ClientRow = {
   income_range: string | null;
   education_level: string | null;
   created_at: string;
+  updated_at: string;
 };
 
-const INCOME_RANGES = [
-  "Menos de S/ 1,500",
-  "S/ 1,500 - S/ 2,999",
-  "S/ 3,000 - S/ 4,999",
-  "S/ 5,000 - S/ 7,999",
-  "S/ 8,000 a más",
-];
-
-const EDUCATION_LEVELS = [
-  "Secundaria",
-  "Técnico",
-  "Universitario",
-  "Postgrado",
-];
+const money = (v: number | null | undefined) => {
+  if (v === null || v === undefined) return "-";
+  return new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: "PEN",
+    maximumFractionDigits: 2,
+  }).format(v);
+};
 
 export default function ClientsPage() {
-  const router = useRouter();
-
-  const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-
-  const [dni, setDni] = useState("");
-  const [names, setNames] = useState("");
-  const [lastNames, setLastNames] = useState("");
-
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [residenceLocation, setResidenceLocation] = useState("");
-  const [occupation, setOccupation] = useState("");
-  const [incomeRange, setIncomeRange] = useState(INCOME_RANGES[1]);
-  const [educationLevel, setEducationLevel] = useState(EDUCATION_LEVELS[2]);
-
-  const [msg, setMsg] = useState<string | null>(null);
   const [clients, setClients] = useState<ClientRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
-  const loadUserAndClients = async () => {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<ClientRow | null>(null);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const askDelete = (id: number) => {
+    setDeletingId(id);
+    setDeleteOpen(true);
+  };
+
+  const deletingClient = useMemo(
+    () => clients.find((c) => c.id === deletingId) ?? null,
+    [clients, deletingId],
+  );
+
+  const cancelDelete = () => {
+    if (busy) return;
+    setDeleteOpen(false);
+    setDeletingId(null);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingId === null) return;
+    await deleteClient(deletingId);
+    setDeleteOpen(false);
+    setDeletingId(null);
+  };
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return clients;
+    return clients.filter((c) => {
+      const hay =
+        `${c.dni} ${c.names} ${c.last_names} ${c.email ?? ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [clients, query]);
+
+  const load = async () => {
     setLoading(true);
-    setMsg(null);
 
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userData.user) {
-      router.push("/login");
+    const { data: userRes } = await supabase.auth.getUser();
+    const uid = userRes.user?.id ?? null;
+    setUserId(uid);
+
+    if (!uid) {
+      setClients([]);
+      setLoading(false);
       return;
     }
 
-    const uid = userData.user.id;
-    setUserId(uid);
-
     const { data, error } = await supabase
       .from("clients")
-      .select("*")
+      .select(
+        "id,user_id,dni,names,last_names,monthly_income,monthly_expenses,dependents,email,phone,residence_location,occupation,income_range,education_level,created_at,updated_at",
+      )
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
 
-    if (error) setMsg(error.message);
-    setClients((data as ClientRow[]) ?? []);
+    if (!error && data) setClients(data as ClientRow[]);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadUserAndClients();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    load();
   }, []);
 
-  const logOp = async (action: string, refId?: number) => {
-    if (!userId) return;
-    await supabase.from("operation_logs").insert({
-      user_id: userId,
-      action,
-      ref_table: "clients",
-      ref_id: refId ?? null,
-    });
+  const onNew = () => {
+    setEditing(null);
+    setOpen(true);
   };
 
-  const createClient = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMsg(null);
+  const onEdit = (client: ClientRow) => {
+    setEditing(client);
+    setOpen(true);
+  };
 
+  const onClose = () => setOpen(false);
+
+  const upsertClient = async (
+    payload: Omit<ClientRow, "id" | "created_at" | "updated_at"> & {
+      id?: number;
+    },
+  ) => {
     if (!userId) return;
 
-    if (!dni || !names || !lastNames) return setMsg("Completa DNI, nombres y apellidos.");
-    if (!email) return setMsg("Completa el correo.");
-    if (!phone) return setMsg("Completa el teléfono.");
-    if (!residenceLocation) return setMsg("Completa distrito/ciudad.");
-    if (!occupation) return setMsg("Completa ocupación/situación laboral.");
+    setBusy(true);
 
-    const { data, error } = await supabase
+    if (payload.id) {
+      const { error } = await supabase
+        .from("clients")
+        .update({
+          dni: payload.dni,
+          names: payload.names,
+          last_names: payload.last_names,
+          monthly_income: payload.monthly_income,
+          monthly_expenses: payload.monthly_expenses,
+          dependents: payload.dependents,
+          email: payload.email,
+          phone: payload.phone,
+          residence_location: payload.residence_location,
+          occupation: payload.occupation,
+          income_range: payload.income_range,
+          education_level: payload.education_level,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", payload.id)
+        .eq("user_id", userId);
+
+      if (!error) {
+        await load();
+        setOpen(false);
+      }
+
+      setBusy(false);
+      return;
+    }
+
+    const { error } = await supabase.from("clients").insert({
+      user_id: userId,
+      dni: payload.dni,
+      names: payload.names,
+      last_names: payload.last_names,
+      monthly_income: payload.monthly_income,
+      monthly_expenses: payload.monthly_expenses,
+      dependents: payload.dependents,
+      email: payload.email,
+      phone: payload.phone,
+      residence_location: payload.residence_location,
+      occupation: payload.occupation,
+      income_range: payload.income_range,
+      education_level: payload.education_level,
+    });
+
+    if (!error) {
+      await load();
+      setOpen(false);
+    }
+
+    setBusy(false);
+  };
+
+  const deleteClient = async (id: number) => {
+    if (!userId) return;
+    setBusy(true);
+
+    const { error } = await supabase
       .from("clients")
-      .insert({
-        user_id: userId,
-        dni,
-        names,
-        last_names: lastNames,
-        email,
-        phone,
-        residence_location: residenceLocation,
-        occupation,
-        income_range: incomeRange,
-        education_level: educationLevel,
-      })
-      .select("id")
-      .single();
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+    if (!error) await load();
 
-    if (error) return setMsg(error.message);
-
-    await logOp("CREATE_CLIENT", data.id);
-
-    setDni("");
-    setNames("");
-    setLastNames("");
-    setEmail("");
-    setPhone("");
-    setResidenceLocation("");
-    setOccupation("");
-    setIncomeRange(INCOME_RANGES[1]);
-    setEducationLevel(EDUCATION_LEVELS[2]);
-
-    await loadUserAndClients();
-    setMsg("✅ Cliente creado.");
+    setBusy(false);
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Clientes</h1>
-        <Link className="underline" href="/dashboard">Volver al dashboard</Link>
+    <div className="w-full">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Clientes</h1>
+          <p className="text-sm text-slate-500">
+            Crea y gestiona la información de tus clientes.
+          </p>
+        </div>
+
+        <button
+          onClick={onNew}
+          className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
+        >
+          + Nuevo cliente
+        </button>
       </div>
 
-      <form onSubmit={createClient} className="border rounded-xl p-4 space-y-3 max-w-3xl">
-        <h2 className="text-lg font-semibold">Nuevo cliente</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-sm">DNI</label>
-            <input className="w-full border rounded-lg p-2" value={dni} onChange={(e) => setDni(e.target.value)} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm">Teléfono</label>
-            <input className="w-full border rounded-lg p-2" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm">Nombres</label>
-            <input className="w-full border rounded-lg p-2" value={names} onChange={(e) => setNames(e.target.value)} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm">Apellidos</label>
-            <input className="w-full border rounded-lg p-2" value={lastNames} onChange={(e) => setLastNames(e.target.value)} />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-sm">Correo</label>
-            <input className="w-full border rounded-lg p-2" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-sm">Dirección (Distrito/Ciudad)</label>
-            <input className="w-full border rounded-lg p-2" value={residenceLocation} onChange={(e) => setResidenceLocation(e.target.value)} />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-sm">Ocupación / Situación laboral</label>
-            <input className="w-full border rounded-lg p-2" value={occupation} onChange={(e) => setOccupation(e.target.value)} />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm">Rango de ingresos</label>
-            <select className="w-full border rounded-lg p-2" value={incomeRange} onChange={(e) => setIncomeRange(e.target.value)}>
-              {INCOME_RANGES.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm">Nivel de instrucción</label>
-            <select className="w-full border rounded-lg p-2" value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}>
-              {EDUCATION_LEVELS.map((l) => (
-                <option key={l} value={l}>{l}</option>
-              ))}
-            </select>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:max-w-md">
+          <div className="relative">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por DNI / nombres / apellidos / email"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none ring-0 focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+            />
+            {query.trim().length > 0 && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-50"
+              >
+                Limpiar
+              </button>
+            )}
           </div>
         </div>
 
-        {msg && <p className="text-sm">{msg}</p>}
+        <div className="text-sm text-slate-500">
+          {loading ? "Cargando..." : `${filtered.length} cliente(s)`}
+        </div>
+      </div>
 
-        <button className="bg-black text-white rounded-lg px-4 py-2">Crear cliente</button>
-      </form>
-
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Mis clientes</h2>
-
+      <div className="mt-6">
         {loading ? (
-          <p>Cargando...</p>
-        ) : clients.length === 0 ? (
-          <p className="text-sm">Aún no tienes clientes.</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[180px] animate-pulse rounded-2xl border border-slate-200 bg-white/60 shadow-sm"
+              />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-8 shadow-sm">
+            <div className="mx-auto flex max-w-xl flex-col items-center gap-2 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                <span className="text-xl">👤</span>
+              </div>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                Aún no tienes clientes registrados
+              </h2>
+              <p className="text-sm text-slate-500">
+                Crea tu primer cliente para empezar a registrar propiedades y
+                realizar simulaciones.
+              </p>
+              <button
+                onClick={onNew}
+                className="mt-3 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
+              >
+                + Nuevo cliente
+              </button>
+            </div>
+          </div>
         ) : (
-          <div className="border rounded-xl overflow-hidden max-w-4xl">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="text-left p-2">DNI</th>
-                  <th className="text-left p-2">Nombre</th>
-                  <th className="text-left p-2">Teléfono</th>
-                  <th className="text-left p-2">Ingresos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((c) => (
-                  <tr key={c.id} className="border-t">
-                    <td className="p-2">{c.dni}</td>
-                    <td className="p-2">{c.names} {c.last_names}</td>
-                    <td className="p-2">{c.phone ?? "-"}</td>
-                    <td className="p-2">{c.income_range ?? "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((c) => (
+              <ClientCard
+                key={c.id}
+                client={c}
+                money={money}
+                onEdit={() => onEdit(c)}
+                onDelete={() => askDelete(c.id)}
+                disabled={busy}
+              />
+            ))}
           </div>
         )}
       </div>
+
+      <ClientModal
+        open={open}
+        onClose={onClose}
+        onSave={upsertClient}
+        saving={busy}
+        initial={editing}
+        userId={userId}
+      />
+      <DeleteClientModal
+        open={deleteOpen}
+        title={
+          deletingClient
+            ? `Eliminar a ${deletingClient.names} ${deletingClient.last_names}`
+            : "Eliminar cliente"
+        }
+        description="¿Seguro que deseas eliminar este cliente? Esta acción no se puede deshacer."
+        onCancel={cancelDelete}
+        onConfirm={confirmDelete}
+        loading={busy}
+      />
     </div>
   );
 }
