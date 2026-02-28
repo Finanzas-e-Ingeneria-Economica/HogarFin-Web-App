@@ -33,7 +33,8 @@ export default function Sidebar({
   const pathname = usePathname();
 
   return (
-    <aside className="border-r border-zinc-200 bg-white/70 backdrop-blur">
+    <aside className="flex flex-col border-r border-zinc-200 bg-white/70 backdrop-blur min-h-screen">
+      {/* Header */}
       <div className="flex h-18 items-center px-5 border-b border-zinc-200">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-sm">
@@ -45,6 +46,7 @@ export default function Sidebar({
         </div>
       </div>
 
+      {/* Navegación */}
       <nav className="px-3 py-4 space-y-1">
         {nav.map((item) => {
           const Icon = item.icon;
@@ -79,9 +81,8 @@ export default function Sidebar({
         })}
       </nav>
 
-      <div className="border-t border-zinc-200" />
-
-      <div className="px-5 py-4">
+      {/* Empuja la cuenta hacia abajo */}
+      <div className="mt-auto border-t border-zinc-200 px-5 py-4">
         <div className="text-xs font-medium uppercase tracking-wider text-zinc-500">
           Cuenta
         </div>
