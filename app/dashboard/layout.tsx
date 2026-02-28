@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import MobileSidebarTrigger from "./_components/MobileSidebarTrigger";
+import { Menu, Plus, LogOut } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import LogoutButton from "./_components/LogoutButton";
 import Sidebar from "./_components/Sidebar";
@@ -30,31 +32,49 @@ export default async function DashboardLayout({
         <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-fuchsia-200/60 blur-3xl" />
       </div>
 
-      <div className="relative grid min-h-screen grid-cols-[280px_1fr]">
+      <div className="relative grid min-h-screen lg:grid-cols-[280px_1fr]">
         <Sidebar displayName={displayName} email={email} />
 
         <div className="flex flex-col">
-          {/* Topbar (más fintech/premium) */}
-          <header className="flex items-center justify-between border-b border-zinc-200 bg-white/80 px-6 py-4 backdrop-blur-md shadow-sm">
-            <div>
+          {/* Topbar */}
+          <header className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-zinc-200 bg-white/80 px-4 py-4 backdrop-blur-md shadow-sm sm:px-6">
+            {/* IZQUIERDA: hamburguesa (solo mobile) */}
+            <MobileSidebarTrigger />
+
+            {/* CENTRO: bienvenida */}
+            <div className="min-w-0">
               <div className="text-sm text-zinc-500">Bienvenido,</div>
-              <div className="font-semibold leading-tight">{displayName}</div>
+              <div className="truncate font-semibold leading-tight">
+                {displayName}
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* DERECHA: acciones */}
+            <div className="flex items-center justify-end gap-3">
+              {/* Desktop: texto / Mobile: ícono */}
               <Link
                 href="/dashboard/simulate"
-                className="rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:opacity-95"
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-95"
               >
-                Nueva simulación
+                <span className="hidden sm:inline">Nueva simulación</span>
+                <span className="sm:hidden">
+                  <Plus className="h-5 w-5" />
+                </span>
               </Link>
 
-              <LogoutButton />
+              {/* Desktop: botón actual / Mobile: icono */}
+              <div className="hidden sm:block">
+                <LogoutButton />
+              </div>
+
+              <div className="sm:hidden">
+                <LogoutButton iconOnly />
+              </div>
             </div>
           </header>
 
-          {/* Main con profundidad (menos plano) */}
-          <main className="flex-1 px-8 py-8 bg-white/40 backdrop-blur-sm">
+          {/* Main */}
+          <main className="flex-1 bg-white/40 backdrop-blur-sm px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-8">
             {children}
           </main>
         </div>

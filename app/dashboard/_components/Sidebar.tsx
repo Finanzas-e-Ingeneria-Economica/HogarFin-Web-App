@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -10,6 +11,7 @@ import {
   Settings,
   UserCircle2,
   HomeIcon,
+  X,
 } from "lucide-react";
 
 const nav = [
@@ -31,9 +33,25 @@ export default function Sidebar({
   email: string;
 }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
-  return (
-    <aside className="flex flex-col border-r border-zinc-200 bg-white/70 backdrop-blur min-h-screen">
+  // Cierra el drawer al cambiar de ruta
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Evita scroll del body cuando el drawer está abierto
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  const SidebarContent = (
+    <aside className="flex h-full flex-col border-r border-zinc-200 bg-white/80 backdrop-blur">
       {/* Header */}
       <div className="flex h-18 items-center px-5 border-b border-zinc-200">
         <div className="flex items-center gap-3">
@@ -61,7 +79,7 @@ export default function Sidebar({
                 "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
                 active
                   ? "bg-gradient-to-r from-indigo-600/10 to-fuchsia-600/10 text-indigo-700 ring-1 ring-indigo-200"
-                  : "text-zinc-700 hover:bg-indigo-50 hover:text-indigo-700",
+                  : "text-zinc-700 hover:bg-indigo-50 hover:text-indigo-700"
               )}
             >
               <span
@@ -69,7 +87,7 @@ export default function Sidebar({
                   "flex h-9 w-9 items-center justify-center rounded-lg transition",
                   active
                     ? "bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-sm"
-                    : "bg-zinc-100 text-zinc-600 group-hover:bg-indigo-100 group-hover:text-indigo-700",
+                    : "bg-zinc-100 text-zinc-600 group-hover:bg-indigo-100 group-hover:text-indigo-700"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -81,13 +99,14 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Empuja la cuenta hacia abajo */}
+      {/* Cuenta al fondo */}
       <div className="mt-auto border-t border-zinc-200 px-5 py-4">
         <div className="text-xs font-medium uppercase tracking-wider text-zinc-500">
           Cuenta
         </div>
 
         <div className="mt-3 flex items-center gap-3">
+          {/* icono neutro (bn) */}
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700">
             <UserCircle2 className="h-5 w-5" />
           </div>
@@ -110,5 +129,51 @@ export default function Sidebar({
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar (visible desde lg) */}
+      <div className="hidden lg:block min-h-screen w-[280px]">
+        {SidebarContent}
+      </div>
+
+      {/* Drawer + overlay (solo mobile/tablet) */}
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          {/* overlay */}
+          <button
+            aria-label="Cerrar menú"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-black/25"
+          />
+
+          {/* panel */}
+          <div className="absolute left-0 top-0 h-full w-[280px]">
+            {/* Botón cerrar */}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white/80 backdrop-blur shadow-sm hover:bg-white"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5 text-zinc-800" />
+            </button>
+
+            {SidebarContent}
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Trigger oculto para abrir desde el Layout */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        id="open-sidebar"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+    </>
   );
 }
