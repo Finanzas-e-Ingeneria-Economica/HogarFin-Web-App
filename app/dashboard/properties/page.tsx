@@ -1,231 +1,307 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { HomeIcon } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import PropertyCard from "./_components/PropertyCard";
+import PropertyModal from "./_components/PropertyModal";
+import DeletePropertyModal from "./_components/DeletePropertyModal";
 
-type Client = {
+export type PropertyRow = {
   id: number;
-  names: string;
-  last_names: string;
-};
-
-type Property = {
-  id: number;
+  user_id: string;
+  client_id: number | null;
+  name: string;
+  property_type: string;
+  currency: "PEN" | "USD";
   price: number;
   initial_payment: number;
+  area_m2: number;
   location: string;
-  area_m2: number | null;
-  client_id: number;
+  created_at: string;
+  updated_at: string;
 };
 
+const formatCurrency = (amount: number, currency: "PEN" | "USD") => {
+  const n = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(
+    amount,
+  );
+  return currency === "USD" ? `$ ${n}` : `S/ ${n}`;
+};
+
+const formatArea = (v: number) =>
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(v);
+
 export default function PropertiesPage() {
-  const router = useRouter();
-
   const [userId, setUserId] = useState<string | null>(null);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
-  const [clientId, setClientId] = useState("");
-  const [price, setPrice] = useState("");
-  const [initialPayment, setInitialPayment] = useState("0");
-  const [location, setLocation] = useState("");
-  const [area, setArea] = useState("");
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<PropertyRow | null>(null);
 
-  const [msg, setMsg] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const loadData = async () => {
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return properties;
+    return properties.filter((p) => {
+      const hay =
+        `${p.name} ${p.location} ${p.property_type} ${p.currency}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [properties, query]);
+
+  const deletingProperty = useMemo(
+    () => properties.find((p) => p.id === deletingId) ?? null,
+    [properties, deletingId],
+  );
+
+  const load = async () => {
     setLoading(true);
 
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      router.push("/login");
-      return;
-    }
-
-    const uid = userData.user.id;
+    const { data: userRes } = await supabase.auth.getUser();
+    const uid = userRes.user?.id ?? null;
     setUserId(uid);
 
-    const { data: clientsData } = await supabase
-      .from("clients")
-      .select("id,names,last_names")
-      .eq("user_id", uid);
-
-    const { data: propertiesData } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false });
-
-    setClients(clientsData ?? []);
-    setProperties(propertiesData ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const logOp = async (action: string, refId?: number) => {
-    if (!userId) return;
-    await supabase.from("operation_logs").insert({
-      user_id: userId,
-      action,
-      ref_table: "properties",
-      ref_id: refId ?? null,
-    });
-  };
-
-  const createProperty = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMsg(null);
-
-    if (!userId) return;
-
-    if (!clientId) return setMsg("Selecciona un cliente.");
-    if (!price || Number(price) <= 0) return setMsg("Precio inválido.");
-    if (Number(initialPayment) < 0) return setMsg("Inicial inválida.");
-    if (!location) return setMsg("Ubicación obligatoria.");
-
-    if (Number(initialPayment) > Number(price)) {
-      return setMsg("La inicial no puede ser mayor al precio.");
+    if (!uid) {
+      setProperties([]);
+      setLoading(false);
+      return;
     }
 
     const { data, error } = await supabase
       .from("properties")
-      .insert({
-        user_id: userId,
-        client_id: Number(clientId),
-        price: Number(price),
-        initial_payment: Number(initialPayment),
-        location,
-        area_m2: area ? Number(area) : null,
-      })
-      .select("id")
-      .single();
+      .select(
+        "id,user_id,client_id,name,property_type,currency,price,initial_payment,area_m2,location,created_at,updated_at",
+      )
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
 
-    if (error) {
-      setMsg(error.message);
+    if (!error && data) setProperties(data as PropertyRow[]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const onNew = () => {
+    setEditing(null);
+    setOpen(true);
+  };
+
+  const onEdit = (p: PropertyRow) => {
+    setEditing(p);
+    setOpen(true);
+  };
+
+  const onClose = () => setOpen(false);
+
+  const askDelete = (id: number) => {
+    setDeletingId(id);
+    setDeleteOpen(true);
+  };
+
+  const cancelDelete = () => {
+    if (busy) return;
+    setDeleteOpen(false);
+    setDeletingId(null);
+  };
+
+  const deleteProperty = async (id: number) => {
+    if (!userId) return false;
+    setBusy(true);
+
+    const { error } = await supabase
+      .from("properties")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (!error) await load();
+    setBusy(false);
+    return !error;
+  };
+
+  const confirmDelete = async () => {
+    if (deletingId === null) return;
+    const ok = await deleteProperty(deletingId);
+    if (ok) {
+      setDeleteOpen(false);
+      setDeletingId(null);
+    }
+  };
+
+  const upsertProperty = async (
+    payload: Omit<PropertyRow, "id" | "created_at" | "updated_at"> & {
+      id?: number;
+    },
+  ) => {
+    if (!userId) return;
+
+    setBusy(true);
+
+    if (payload.id) {
+      const { error } = await supabase
+        .from("properties")
+        .update({
+          name: payload.name,
+          property_type: payload.property_type,
+          currency: payload.currency,
+          price: payload.price,
+          initial_payment: payload.initial_payment,
+          area_m2: payload.area_m2,
+          location: payload.location,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", payload.id)
+        .eq("user_id", userId);
+
+      if (!error) {
+        await load();
+        setOpen(false);
+      }
+
+      setBusy(false);
       return;
     }
 
-    await logOp("CREATE_PROPERTY", data.id);
+    const { error } = await supabase.from("properties").insert({
+      user_id: userId,
+      client_id: null,
+      name: payload.name,
+      property_type: payload.property_type,
+      currency: payload.currency,
+      price: payload.price,
+      initial_payment: payload.initial_payment,
+      area_m2: payload.area_m2,
+      location: payload.location,
+    });
 
-    setClientId("");
-    setPrice("");
-    setInitialPayment("0");
-    setLocation("");
-    setArea("");
+    if (!error) {
+      await load();
+      setOpen(false);
+    }
 
-    await loadData();
-    setMsg("✅ Propiedad creada.");
+    setBusy(false);
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-semibold">Propiedades</h1>
-        <Link className="underline" href="/dashboard">
-          Volver al dashboard
-        </Link>
+    <div className="w-full">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Propiedades</h1>
+          <p className="text-sm text-slate-500">
+            Gestiona tu inventario de propiedades.
+          </p>
+        </div>
+
+        <button
+          onClick={onNew}
+          className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
+        >
+          + Nueva propiedad
+        </button>
       </div>
 
-      <form onSubmit={createProperty} className="border rounded-xl p-4 space-y-3 max-w-2xl">
-        <h2 className="text-lg font-semibold">Nueva propiedad</h2>
-
-        <div className="space-y-1">
-          <label className="text-sm">Cliente</label>
-          <select
-            className="w-full border rounded-lg p-2"
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-          >
-            <option value="">Seleccionar cliente</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.names} {c.last_names}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-sm">Precio</label>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:max-w-md">
+          <div className="relative">
             <input
-              className="w-full border rounded-lg p-2"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nombre / ubicación / tipo / moneda"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none ring-0 focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
             />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm">Inicial</label>
-            <input
-              className="w-full border rounded-lg p-2"
-              value={initialPayment}
-              onChange={(e) => setInitialPayment(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-sm">Ubicación</label>
-            <input
-              className="w-full border rounded-lg p-2"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm">Área (m2)</label>
-            <input
-              className="w-full border rounded-lg p-2"
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-            />
+            {query.trim().length > 0 && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-50"
+              >
+                Limpiar
+              </button>
+            )}
           </div>
         </div>
 
-        {msg && <p className="text-sm">{msg}</p>}
+        <div className="text-sm text-slate-500">
+          {loading ? "Cargando..." : `${filtered.length} propiedad(es)`}
+        </div>
+      </div>
 
-        <button className="bg-black text-white rounded-lg px-4 py-2">
-          Crear propiedad
-        </button>
-      </form>
-
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Mis propiedades</h2>
-
+      <div className="mt-6">
         {loading ? (
-          <p>Cargando...</p>
-        ) : properties.length === 0 ? (
-          <p>Aún no tienes propiedades.</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[200px] animate-pulse rounded-2xl border border-slate-200 bg-white/60 shadow-sm"
+              />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-8 shadow-sm">
+            <div className="mx-auto flex max-w-xl flex-col items-center gap-2 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
+                <HomeIcon className="h-6 w-6 text-violet-600" />
+              </div>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                Aún no tienes propiedades registradas
+              </h2>
+              <p className="text-sm text-slate-500">
+                Crea tu primera propiedad para luego simular con cualquier
+                cliente.
+              </p>
+              <button
+                onClick={onNew}
+                className="mt-3 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
+              >
+                + Nueva propiedad
+              </button>
+            </div>
+          </div>
         ) : (
-          <div className="border rounded-xl overflow-hidden max-w-3xl">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="text-left p-2">Precio</th>
-                  <th className="text-left p-2">Inicial</th>
-                  <th className="text-left p-2">Ubicación</th>
-                </tr>
-              </thead>
-              <tbody>
-                {properties.map((p) => (
-                  <tr key={p.id} className="border-t">
-                    <td className="p-2">{p.price.toFixed(2)}</td>
-                    <td className="p-2">{p.initial_payment.toFixed(2)}</td>
-                    <td className="p-2">{p.location}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((p) => (
+              <PropertyCard
+                key={p.id}
+                property={p}
+                formatCurrency={formatCurrency}
+                formatArea={formatArea}
+                onEdit={() => onEdit(p)}
+                onDelete={() => askDelete(p.id)}
+                disabled={busy}
+              />
+            ))}
           </div>
         )}
       </div>
+
+      <PropertyModal
+        open={open}
+        onClose={onClose}
+        onSave={upsertProperty}
+        saving={busy}
+        initial={editing}
+        userId={userId}
+      />
+
+      <DeletePropertyModal
+        open={deleteOpen}
+        title={
+          deletingProperty
+            ? `Eliminar: ${deletingProperty.name}`
+            : "Eliminar propiedad"
+        }
+        description="¿Seguro que deseas eliminar esta propiedad? Esta acción no se puede deshacer."
+        onCancel={cancelDelete}
+        onConfirm={confirmDelete}
+        loading={busy}
+      />
     </div>
   );
 }
