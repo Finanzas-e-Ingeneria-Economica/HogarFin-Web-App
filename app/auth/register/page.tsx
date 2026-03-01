@@ -127,7 +127,7 @@ export default function RegisterPage() {
           <div className="space-y-2">
             <label className="text-xs font-medium text-zinc-700">Nombre</label>
             <input
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-green-300 focus:ring-4 focus:ring-green-100"
               placeholder="Jhon"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -139,7 +139,7 @@ export default function RegisterPage() {
               Apellido
             </label>
             <input
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-green-300 focus:ring-4 focus:ring-green-100"
               placeholder="Doe"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -151,7 +151,7 @@ export default function RegisterPage() {
           <label className="text-xs font-medium text-zinc-700">Email</label>
           <input
             type="email"
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-green-300 focus:ring-4 focus:ring-green-100"
             placeholder="tu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -166,7 +166,7 @@ export default function RegisterPage() {
           <div className="relative">
             <input
               type={showPass ? "text" : "password"}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 pr-10 text-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 pr-10 text-sm outline-none focus:border-green-300 focus:ring-4 focus:ring-green-100"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -237,7 +237,7 @@ export default function RegisterPage() {
               type={showConfirm ? "text" : "password"}
               className={`w-full rounded-xl border bg-white px-3 py-2.5 pr-10 text-sm outline-none focus:ring-4 ${
                 confirm.length === 0
-                  ? "border-zinc-200 focus:border-indigo-300 focus:ring-indigo-100"
+                  ? "border-zinc-200 focus:border-green-300 focus:ring-green-100"
                   : passwordsMatch
                     ? "border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100"
                     : "border-red-300 focus:border-red-400 focus:ring-red-100"
@@ -294,7 +294,7 @@ export default function RegisterPage() {
 
         <button
           disabled={!canSubmit}
-          className="mt-2 w-full rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:opacity-95 disabled:opacity-40"
+          className="mt-2 w-full rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:opacity-95 disabled:opacity-40"
           type="submit"
         >
           {loading ? "Creando cuenta..." : "Crear cuenta"}

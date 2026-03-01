@@ -102,7 +102,6 @@ export default function ClientModal({
     if (!names) return "Los nombres son obligatorios";
     if (!last) return "Los apellidos son obligatorios";
 
-    // No números en nombres/apellidos
     const onlyLetters = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s']+$/;
     if (!onlyLetters.test(names))
       return "Los nombres no pueden contener números ni caracteres inválidos";
@@ -219,7 +218,7 @@ export default function ClientModal({
               <input
                 value={form.dni}
                 onChange={(e) => set("dni", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="00000000"
               />
             </Field>
@@ -230,7 +229,7 @@ export default function ClientModal({
                 onChange={(e) => set("phone", e.target.value)}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="999999999"
               />
             </Field>
@@ -239,7 +238,7 @@ export default function ClientModal({
               <input
                 value={form.names}
                 onChange={(e) => set("names", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Jhon"
               />
             </Field>
@@ -248,7 +247,7 @@ export default function ClientModal({
               <input
                 value={form.last_names}
                 onChange={(e) => set("last_names", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Doe"
               />
             </Field>
@@ -257,7 +256,7 @@ export default function ClientModal({
               <input
                 value={form.email}
                 onChange={(e) => set("email", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="tu@email.com"
               />
             </Field>
@@ -266,7 +265,7 @@ export default function ClientModal({
               <input
                 value={form.residence_location}
                 onChange={(e) => set("residence_location", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Lima, Perú"
               />
             </Field>
@@ -275,7 +274,7 @@ export default function ClientModal({
               <input
                 value={form.occupation}
                 onChange={(e) => set("occupation", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Ingeniero / Analista / Independiente..."
               />
             </Field>
@@ -285,7 +284,7 @@ export default function ClientModal({
                 value={form.monthly_income}
                 onChange={(e) => set("monthly_income", e.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="3500"
               />
             </Field>
@@ -295,7 +294,7 @@ export default function ClientModal({
                 value={form.monthly_expenses}
                 onChange={(e) => set("monthly_expenses", e.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="1200"
               />
             </Field>
@@ -305,7 +304,7 @@ export default function ClientModal({
                 value={form.dependents}
                 onChange={(e) => set("dependents", e.target.value)}
                 inputMode="numeric"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="0"
               />
             </Field>
@@ -314,7 +313,7 @@ export default function ClientModal({
               <select
                 value={form.income_range}
                 onChange={(e) => set("income_range", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
               >
                 {incomeRanges.map((r) => (
                   <option key={r} value={r}>
@@ -328,7 +327,7 @@ export default function ClientModal({
               <select
                 value={form.education_level}
                 onChange={(e) => set("education_level", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
               >
                 {educationLevels.map((r) => (
                   <option key={r} value={r}>
@@ -351,7 +350,7 @@ export default function ClientModal({
           <button
             onClick={submit}
             disabled={saving}
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 disabled:opacity-60"
+            className="rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 disabled:opacity-60"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>

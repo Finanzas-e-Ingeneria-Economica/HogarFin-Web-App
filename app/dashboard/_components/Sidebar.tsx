@@ -35,12 +35,10 @@ export default function Sidebar({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Cierra el drawer al cambiar de ruta
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  // Evita scroll del body cuando el drawer está abierto
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -55,7 +53,7 @@ export default function Sidebar({
       {/* Header */}
       <div className="flex h-18 items-center px-5 border-b border-zinc-200">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 text-white shadow-sm">
             <HomeIcon className="h-5 w-5 stroke-[2.2]" />
           </div>
           <div className="text-base font-semibold leading-5 text-zinc-900">
@@ -78,16 +76,16 @@ export default function Sidebar({
               className={cn(
                 "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
                 active
-                  ? "bg-gradient-to-r from-indigo-600/10 to-fuchsia-600/10 text-indigo-700 ring-1 ring-indigo-200"
-                  : "text-zinc-700 hover:bg-indigo-50 hover:text-indigo-700"
+                  ? "bg-gradient-to-r from-green-600/10 to-emerald-600/10 text-green-700 ring-1 ring-green-200"
+                  : "text-zinc-700 hover:bg-green-50 hover:text-green-700"
               )}
             >
               <span
                 className={cn(
                   "flex h-9 w-9 items-center justify-center rounded-lg transition",
                   active
-                    ? "bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-sm"
-                    : "bg-zinc-100 text-zinc-600 group-hover:bg-indigo-100 group-hover:text-indigo-700"
+                    ? "bg-gradient-to-br from-green-600 to-emerald-600 text-white shadow-sm"
+                    : "bg-zinc-100 text-zinc-600 group-hover:bg-green-100 group-hover:text-green-700"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -106,7 +104,6 @@ export default function Sidebar({
         </div>
 
         <div className="mt-3 flex items-center gap-3">
-          {/* icono neutro (bn) */}
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700">
             <UserCircle2 className="h-5 w-5" />
           </div>
@@ -133,24 +130,19 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Desktop sidebar (visible desde lg) */}
       <div className="hidden lg:block min-h-screen w-[280px]">
         {SidebarContent}
       </div>
 
-      {/* Drawer + overlay (solo mobile/tablet) */}
       {open && (
         <div className="lg:hidden fixed inset-0 z-50">
-          {/* overlay */}
           <button
             aria-label="Cerrar menú"
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/25"
           />
 
-          {/* panel */}
           <div className="absolute left-0 top-0 h-full w-[280px]">
-            {/* Botón cerrar */}
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -165,7 +157,6 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* ✅ Trigger oculto para abrir desde el Layout */}
       <button
         type="button"
         onClick={() => setOpen(true)}

@@ -202,7 +202,7 @@ export default function PropertiesPage() {
 
         <button
           onClick={onNew}
-          className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
+          className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
         >
           + Nueva propiedad
         </button>
@@ -215,7 +215,7 @@ export default function PropertiesPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por nombre / ubicación / tipo / moneda"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none ring-0 focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none ring-0 focus:border-green-300 focus:ring-2 focus:ring-green-100"
             />
             {query.trim().length > 0 && (
               <button
@@ -246,8 +246,8 @@ export default function PropertiesPage() {
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white/70 p-8 shadow-sm">
             <div className="mx-auto flex max-w-xl flex-col items-center gap-2 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
-                <HomeIcon className="h-6 w-6 text-violet-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50">
+                <HomeIcon className="h-6 w-6 text-green-600" />
               </div>
               <h2 className="mt-1 text-lg font-semibold text-slate-900">
                 Aún no tienes propiedades registradas
@@ -258,7 +258,7 @@ export default function PropertiesPage() {
               </p>
               <button
                 onClick={onNew}
-                className="mt-3 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
+                className="mt-3 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 active:opacity-90"
               >
                 + Nueva propiedad
               </button>

@@ -16,7 +16,9 @@ type FormState = {
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSave: (payload: Omit<PropertyRow, "id" | "created_at" | "updated_at"> & { id?: number }) => Promise<void>;
+  onSave: (
+    payload: Omit<PropertyRow, "id" | "created_at" | "updated_at"> & { id?: number },
+  ) => Promise<void>;
   saving: boolean;
   initial: PropertyRow | null;
   userId: string | null;
@@ -39,7 +41,14 @@ const formatWithCommas = (raw: string) => {
   return intFormatted;
 };
 
-export default function PropertyModal({ open, onClose, onSave, saving, initial, userId }: Props) {
+export default function PropertyModal({
+  open,
+  onClose,
+  onSave,
+  saving,
+  initial,
+  userId,
+}: Props) {
   const title = initial ? "Editar propiedad" : "Nueva propiedad";
 
   const initialState: FormState = useMemo(
@@ -49,7 +58,9 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
       currency: initial?.currency ?? "PEN",
       price: initial?.price !== undefined ? String(initial.price) : "",
       initial_payment:
-        initial && initial.initial_payment !== null && initial.initial_payment !== undefined ? String(initial.initial_payment) : "",
+        initial && initial.initial_payment !== null && initial.initial_payment !== undefined
+          ? String(initial.initial_payment)
+          : "",
       area_m2: initial?.area_m2 !== undefined ? String(initial.area_m2) : "",
       location: initial?.location ?? "",
     }),
@@ -125,23 +136,33 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={() => !saving && onClose()} />
+      <div
+        className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
+        onClick={() => !saving && onClose()}
+      />
 
       <div className="relative w-[95vw] max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
             <div className="text-base font-semibold text-slate-900">{title}</div>
-            <div className="text-xs text-slate-500">Completa todos los campos para guardar la propiedad.</div>
+            <div className="text-xs text-slate-500">
+              Completa todos los campos para guardar la propiedad.
+            </div>
           </div>
 
-          <button onClick={() => !saving && onClose()} className="rounded-xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+          <button
+            onClick={() => !saving && onClose()}
+            className="rounded-xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+          >
             ✕
           </button>
         </div>
 
         <div className="max-h-[75vh] overflow-auto px-6 py-5">
           {error && (
-            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
           )}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -149,7 +170,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
               <input
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Ej: Depa Miraflores 65m"
               />
             </Field>
@@ -158,7 +179,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
               <select
                 value={form.property_type}
                 onChange={(e) => set("property_type", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
               >
                 {types.map((t) => (
                   <option key={t} value={t}>
@@ -172,7 +193,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
               <select
                 value={form.currency}
                 onChange={(e) => set("currency", e.target.value as "PEN" | "USD")}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
               >
                 <option value="PEN">PEN (S/)</option>
                 <option value="USD">USD ($)</option>
@@ -184,7 +205,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
                 value={formatWithCommas(form.price)}
                 onChange={(e) => set("price", sanitizeDecimal(e.target.value))}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="100,000"
               />
             </Field>
@@ -194,7 +215,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
                 value={formatWithCommas(form.initial_payment)}
                 onChange={(e) => set("initial_payment", sanitizeDecimal(e.target.value))}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Ej: 10,000"
               />
             </Field>
@@ -204,7 +225,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
                 value={formatWithCommas(form.area_m2)}
                 onChange={(e) => set("area_m2", sanitizeDecimal(e.target.value))}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Ej: 65.5"
               />
             </Field>
@@ -213,7 +234,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
               <input
                 value={form.location}
                 onChange={(e) => set("location", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Miraflores, Lima"
               />
             </Field>
@@ -231,7 +252,7 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
           <button
             onClick={submit}
             disabled={saving}
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 disabled:opacity-60"
+            className="rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 disabled:opacity-60"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>
@@ -241,7 +262,15 @@ export default function PropertyModal({ open, onClose, onSave, saving, initial, 
   );
 }
 
-function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+function Field({
+  label,
+  children,
+  full,
+}: {
+  label: string;
+  children: React.ReactNode;
+  full?: boolean;
+}) {
   return (
     <div className={full ? "md:col-span-2" : ""}>
       <div className="mb-1 text-xs font-medium text-slate-600">{label}</div>

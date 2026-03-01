@@ -27,9 +27,9 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-[#f7f8fb] text-zinc-900">
       {/* Blobs coherentes con auth */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-indigo-200/70 blur-3xl" />
+        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-green-200/70 blur-3xl" />
         <div className="absolute top-20 -right-24 h-72 w-72 rounded-full bg-cyan-200/70 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-fuchsia-200/60 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-lime-200/60 blur-3xl" />
       </div>
 
       <div className="relative grid min-h-screen lg:grid-cols-[280px_1fr]">
@@ -54,7 +54,7 @@ export default async function DashboardLayout({
               {/* Desktop: texto / Mobile: ícono */}
               <Link
                 href="/dashboard/simulate"
-                className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-95"
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-95"
               >
                 <span className="hidden sm:inline">Nueva simulación</span>
                 <span className="sm:hidden">
