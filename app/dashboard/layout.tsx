@@ -24,7 +24,7 @@ export default async function DashboardLayout({
   const email = user.email || "";
 
   return (
-    <div className="min-h-screen bg-[#f7f8fb] text-zinc-900">
+    <div className="h-screen overflow-hidden bg-[#f7f8fb] text-zinc-900">
       {/* Blobs coherentes con auth */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-green-200/70 blur-3xl" />
@@ -32,10 +32,10 @@ export default async function DashboardLayout({
         <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-lime-200/60 blur-3xl" />
       </div>
 
-      <div className="relative grid min-h-screen lg:grid-cols-[280px_1fr]">
+      <div className="relative grid h-full lg:grid-cols-[280px_1fr] overflow-hidden">
         <Sidebar displayName={displayName} email={email} />
 
-        <div className="flex flex-col">
+        <div className="flex min-h-0 flex-col">
           {/* Topbar */}
           <header className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-zinc-200 bg-white/80 px-4 py-4 backdrop-blur-md shadow-sm sm:px-6">
             {/* IZQUIERDA: hamburguesa (solo mobile) */}
@@ -74,7 +74,7 @@ export default async function DashboardLayout({
           </header>
 
           {/* Main */}
-          <main className="flex-1 bg-white/40 backdrop-blur-sm px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-8">
+          <main className="min-h-0 flex-1 overflow-y-auto bg-white/40 backdrop-blur-sm px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-8">
             {children}
           </main>
         </div>
