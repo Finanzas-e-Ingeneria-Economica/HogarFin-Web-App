@@ -16,11 +16,11 @@ import {
 } from "lucide-react";
 
 const nav = [
-  { href: "/dashboard/board", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/clients", label: "Clientes", icon: Users },
-  { href: "/dashboard/properties", label: "Propiedades", icon: Building2 },
-  { href: "/dashboard/simulate", label: "Nueva Simulación", icon: Calculator },
-  { href: "/dashboard/simulate/history", label: "Historial", icon: History },
+  { href: "/dashboard/board",              label: "Dashboard",        icon: LayoutDashboard },
+  { href: "/dashboard/clients",            label: "Clientes",         icon: Users },
+  { href: "/dashboard/properties",         label: "Propiedades",      icon: Building2 },
+  { href: "/dashboard/simulate",           label: "Nueva Simulación", icon: Calculator },
+  { href: "/dashboard/simulate/history",   label: "Historial",        icon: History },
 ];
 
 function cn(...classes: (string | boolean | undefined)[]) {
@@ -118,14 +118,18 @@ export default function Sidebar({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => alert("Configuración (pendiente)")}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm transition hover:bg-zinc-50"
+        <Link
+          href="/dashboard/settings"
+          className={cn(
+            "mt-4 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm shadow-sm transition",
+            pathname === "/dashboard/settings"
+              ? "border-green-200 bg-green-50 text-green-700"
+              : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+          )}
         >
           <Settings className="h-4 w-4" />
           Configuración
-        </button>
+        </Link>
       </div>
     </aside>
   );
