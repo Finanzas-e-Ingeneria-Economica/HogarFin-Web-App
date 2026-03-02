@@ -13,14 +13,16 @@ import {
   HomeIcon,
   X,
   History,
+  GitCompare,
 } from "lucide-react";
 
 const nav = [
-  { href: "/dashboard/board",              label: "Dashboard",        icon: LayoutDashboard },
-  { href: "/dashboard/clients",            label: "Clientes",         icon: Users },
-  { href: "/dashboard/properties",         label: "Propiedades",      icon: Building2 },
-  { href: "/dashboard/simulate",           label: "Nueva Simulación", icon: Calculator },
-  { href: "/dashboard/simulate/history",   label: "Historial",        icon: History },
+  { href: "/dashboard/board",            label: "Dashboard",        icon: LayoutDashboard },
+  { href: "/dashboard/clients",          label: "Clientes",         icon: Users },
+  { href: "/dashboard/properties",       label: "Propiedades",      icon: Building2 },
+  { href: "/dashboard/simulate",         label: "Nueva Simulación", icon: Calculator },
+  { href: "/dashboard/simulate/history", label: "Historial",        icon: History },
+  { href: "/dashboard/compare",          label: "Comparador",       icon: GitCompare },
 ];
 
 function cn(...classes: (string | boolean | undefined)[]) {
@@ -37,17 +39,13 @@ export default function Sidebar({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  useEffect(() => { setOpen(false); }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    return () => { document.body.style.overflow = prev; };
   }, [open]);
 
   const SidebarContent = (
@@ -58,9 +56,7 @@ export default function Sidebar({
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 text-white shadow-sm">
             <HomeIcon className="h-5 w-5 stroke-[2.2]" />
           </div>
-          <div className="text-base font-semibold leading-5 text-zinc-900">
-            HogarFin
-          </div>
+          <div className="text-base font-semibold leading-5 text-zinc-900">HogarFin</div>
         </div>
       </div>
 
@@ -68,8 +64,12 @@ export default function Sidebar({
       <nav className="px-3 py-4 space-y-1">
         {nav.map((item) => {
           const Icon = item.icon;
+          // Para simulate, solo marcar activo si es exactamente /dashboard/simulate
+          // (no cuando estamos en /history o /compare)
           const active =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+            item.href === "/dashboard/simulate"
+              ? pathname === "/dashboard/simulate"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
 
           return (
             <Link
@@ -92,7 +92,6 @@ export default function Sidebar({
               >
                 <Icon className="h-4 w-4" />
               </span>
-
               <span className="font-medium">{item.label}</span>
             </Link>
           );
@@ -101,19 +100,14 @@ export default function Sidebar({
 
       {/* Cuenta al fondo */}
       <div className="mt-auto border-t border-zinc-200 px-5 py-4">
-        <div className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-          Cuenta
-        </div>
+        <div className="text-xs font-medium uppercase tracking-wider text-zinc-500">Cuenta</div>
 
         <div className="mt-3 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700">
             <UserCircle2 className="h-5 w-5" />
           </div>
-
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-zinc-900">
-              {displayName}
-            </div>
+            <div className="truncate text-sm font-semibold text-zinc-900">{displayName}</div>
             <div className="truncate text-xs text-zinc-500">{email}</div>
           </div>
         </div>
@@ -147,7 +141,6 @@ export default function Sidebar({
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/25"
           />
-
           <div className="absolute left-0 top-0 h-full w-[280px]">
             <button
               type="button"
@@ -157,7 +150,6 @@ export default function Sidebar({
             >
               <X className="h-5 w-5 text-zinc-800" />
             </button>
-
             {SidebarContent}
           </div>
         </div>

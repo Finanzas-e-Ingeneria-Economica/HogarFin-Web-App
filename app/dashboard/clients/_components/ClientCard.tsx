@@ -1,5 +1,6 @@
 "use client";
 
+import { FileText } from "lucide-react";
 import type { ClientRow } from "../page";
 
 type Props = {
@@ -7,6 +8,8 @@ type Props = {
   money: (v: number | null | undefined) => string;
   onEdit: () => void;
   onDelete: () => void;
+  onGeneratePDF: () => void;
+  generatingPDF?: boolean;
   disabled?: boolean;
 };
 
@@ -15,6 +18,8 @@ export default function ClientCard({
   money,
   onEdit,
   onDelete,
+  onGeneratePDF,
+  generatingPDF,
   disabled,
 }: Props) {
   return (
@@ -32,7 +37,7 @@ export default function ClientCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={onEdit}
               disabled={disabled}
@@ -53,64 +58,58 @@ export default function ClientCard({
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
             <div className="text-xs text-slate-500">Ingreso mensual</div>
-            <div className="mt-1 font-semibold text-slate-900">
-              {money(client.monthly_income)}
-            </div>
+            <div className="mt-1 font-semibold text-slate-900">{money(client.monthly_income)}</div>
           </div>
 
           <div className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
             <div className="text-xs text-slate-500">Egreso mensual</div>
-            <div className="mt-1 font-semibold text-slate-900">
-              {money(client.monthly_expenses)}
-            </div>
+            <div className="mt-1 font-semibold text-slate-900">{money(client.monthly_expenses)}</div>
           </div>
 
           <div className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
             <div className="text-xs text-slate-500">Dependientes</div>
-            <div className="mt-1 font-semibold text-slate-900">
-              {client.dependents}
-            </div>
+            <div className="mt-1 font-semibold text-slate-900">{client.dependents}</div>
           </div>
 
           <div className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
             <div className="text-xs text-slate-500">Ocupación</div>
-            <div className="mt-1 truncate font-semibold text-slate-900">
-              {client.occupation ?? "-"}
-            </div>
+            <div className="mt-1 truncate font-semibold text-slate-900">{client.occupation ?? "-"}</div>
           </div>
         </div>
 
         <div className="mt-4 space-y-1.5 text-xs text-slate-600">
           <div className="flex items-center justify-between gap-2">
             <span className="text-slate-500">Email</span>
-            <span className="truncate font-medium text-slate-700">
-              {client.email ?? "-"}
-            </span>
+            <span className="truncate font-medium text-slate-700">{client.email ?? "-"}</span>
           </div>
           <div className="flex items-center justify-between gap-2">
             <span className="text-slate-500">Teléfono</span>
-            <span className="truncate font-medium text-slate-700">
-              {client.phone ?? "-"}
-            </span>
+            <span className="truncate font-medium text-slate-700">{client.phone ?? "-"}</span>
           </div>
           <div className="flex items-center justify-between gap-2">
             <span className="text-slate-500">Residencia</span>
-            <span className="truncate font-medium text-slate-700">
-              {client.residence_location ?? "-"}
-            </span>
+            <span className="truncate font-medium text-slate-700">{client.residence_location ?? "-"}</span>
           </div>
           <div className="flex items-center justify-between gap-2">
             <span className="text-slate-500">Rango ingresos</span>
-            <span className="truncate font-medium text-slate-700">
-              {client.income_range ?? "-"}
-            </span>
+            <span className="truncate font-medium text-slate-700">{client.income_range ?? "-"}</span>
           </div>
           <div className="flex items-center justify-between gap-2">
             <span className="text-slate-500">Educación</span>
-            <span className="truncate font-medium text-slate-700">
-              {client.education_level ?? "-"}
-            </span>
+            <span className="truncate font-medium text-slate-700">{client.education_level ?? "-"}</span>
           </div>
+        </div>
+
+        {/* Botón ficha PDF */}
+        <div className="mt-4 border-t border-slate-100 pt-3">
+          <button
+            onClick={onGeneratePDF}
+            disabled={disabled || generatingPDF}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50 transition"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            {generatingPDF ? "Generando ficha..." : "📄 Ficha del Cliente (PDF)"}
+          </button>
         </div>
       </div>
     </div>
