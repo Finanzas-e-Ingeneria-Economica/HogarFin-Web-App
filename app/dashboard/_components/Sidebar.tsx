@@ -12,13 +12,15 @@ import {
   UserCircle2,
   HomeIcon,
   X,
+  History,
 } from "lucide-react";
 
 const nav = [
   { href: "/dashboard/board", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/clients", label: "Clientes", icon: Users },
   { href: "/dashboard/properties", label: "Propiedades", icon: Building2 },
-  { href: "/dashboard/simulate", label: "Simulaciones", icon: Calculator },
+  { href: "/dashboard/simulate", label: "Nueva Simulación", icon: Calculator },
+  { href: "/dashboard/simulate/history", label: "Historial", icon: History },
 ];
 
 function cn(...classes: (string | boolean | undefined)[]) {

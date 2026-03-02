@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   BarChart3,
@@ -11,6 +12,7 @@ import {
   Zap,
   CheckCircle2,
   Calculator,
+  History,
 } from "lucide-react";
 
 import type { Client, Entity, Property, SimResults } from "./_utils/types";
@@ -27,6 +29,7 @@ const sel =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 appearance-none cursor-pointer";
 
 export default function SimulatePage() {
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
 
   const [clients, setClients] = useState<Client[]>([]);
@@ -379,13 +382,22 @@ export default function SimulatePage() {
   return (
     <div className="h-[calc(100vh-120px)] overflow-y-auto">
       <div className="mx-auto w-full max-w-[1320px] px-4 pb-10 pt-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            Nueva Simulación
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Crédito MiVivienda — Método Francés Vencido Ordinario
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Nueva Simulación
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Crédito MiVivienda — Método Francés Vencido Ordinario
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/dashboard/simulate/history")}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition"
+          >
+            <History className="h-4 w-4 text-green-600" />
+            Ver Historial
+          </button>
         </div>
 
         {error && (
