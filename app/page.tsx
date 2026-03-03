@@ -203,7 +203,7 @@ export default function LandingPage() {
           <div className="text-left">
             <h4 className="text-white font-black mb-6 uppercase tracking-widest text-sm text-left">Legal</h4>
             <ul className="space-y-4 font-bold text-left">
-              <li>UPC - Ingeniería de Sistemas</li>
+              <li>UPC - Ingeniería de Software y Sistemas</li>
               <li>Finanzas e Ingeniería Económica</li>
               <li>Ciclo 2026-0</li>
             </ul>
