@@ -1,53 +1,59 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          res.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: any) {
-          res.cookies.set({ name, value: "", ...options });
-        },
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
       },
-    }
-  );
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) =>
+          request.cookies.set(name, value)
+        )
+        response = NextResponse.next({
+          request,
+        })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        )
+      },
+    },
+  }
+)
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  // IMPORTANTE: Usa getUser() en lugar de getSession() para mayor seguridad
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const pathname = req.nextUrl.pathname;
+  const pathname = request.nextUrl.pathname
+  const isAuthRoute = pathname.startsWith("/auth")
+  const isDashboardRoute = pathname.startsWith("/dashboard")
 
-  const isAuthRoute = pathname.startsWith("/auth");
-  const isDashboardRoute = pathname.startsWith("/dashboard");
-
-  // Si no está logueado y quiere dashboard -> /auth/login
-  if (!session && isDashboardRoute) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/auth/login";
-    return NextResponse.redirect(url);
+  // Lógica de redirección
+  if (!user && isDashboardRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/auth/login"
+    return NextResponse.redirect(url)
   }
 
-  // Si está logueado y quiere /auth/* -> /dashboard/board
-  if (session && isAuthRoute) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/dashboard/board";
-    return NextResponse.redirect(url);
+  if (user && isAuthRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard/board"
+    return NextResponse.redirect(url)
   }
 
-  return res;
+  return response
 }
 
 export const config = {
   matcher: ["/auth/:path*", "/dashboard/:path*"],
-};
+}
