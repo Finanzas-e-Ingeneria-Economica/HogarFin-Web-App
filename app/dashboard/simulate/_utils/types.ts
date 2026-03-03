@@ -1,4 +1,11 @@
-export type Client = { id: number; names: string; last_names: string; dni: string };
+export type Client = {
+  id: number;
+  names: string;
+  last_names: string;
+  dni: string;
+  monthly_income: number | null;
+  dependents: number | null;
+};
 
 export type Property = {
   id: number;
@@ -7,6 +14,7 @@ export type Property = {
   currency: "PEN" | "USD";
   initial_payment: number;
   location: string;
+  property_type: "Departamento" | "Casa" | "Terreno" | "Otro" | string;
 };
 
 export type Entity = { id: number; name: string };
