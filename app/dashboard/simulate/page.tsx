@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import {
@@ -27,6 +27,136 @@ const inp =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100";
 const sel =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 appearance-none cursor-pointer";
+
+type BonoAuto = {
+  applies: boolean;
+  bonus: number;
+  label: string;
+  reason: string;
+};
+
+function calcTechoPropioAVN(args: {
+  monthlyIncome: number;
+  dependents: number;
+  propertyType: string;
+  pricePEN: number;
+  initialPEN: number;
+}): BonoAuto {
+  const income = Number(args.monthlyIncome) || 0;
+  const deps = Number(args.dependents) || 0;
+  const ptype = String(args.propertyType || "");
+  const price = Number(args.pricePEN) || 0;
+  const init = Number(args.initialPEN) || 0;
+
+  // Filtro 1: precio válido
+  if (!price || price <= 0)
+    return {
+      applies: false,
+      bonus: 0,
+      label: "No aplica",
+      reason: "Precio inválido",
+    };
+
+  // Filtro 2: cuota inicial válida
+  if (init < 0)
+    return {
+      applies: false,
+      bonus: 0,
+      label: "No aplica",
+      reason: "Cuota inicial inválida",
+    };
+
+  // Filtro 3: grupo familiar
+  if (deps < 1)
+    return {
+      applies: false,
+      bonus: 0,
+      label: "No aplica",
+      reason: "Sin grupo familiar (dependientes)",
+    };
+
+  // Filtro 4: tipo de inmueble
+  if (!["Casa", "Departamento"].includes(ptype))
+    return {
+      applies: false,
+      bonus: 0,
+      label: "No aplica",
+      reason: "Tipo de inmueble no válido (solo Casa o Departamento)",
+    };
+
+  let candidate: BonoAuto = {
+    applies: false,
+    bonus: 0,
+    label: "No aplica",
+    reason: "Precio fuera del rango VIS",
+  };
+
+  // VIS Priorizada
+  if (income <= 2071) {
+    if (ptype === "Casa" && price <= 60000) {
+      candidate = {
+        applies: true,
+        bonus: 58300,
+        label: "Techo Propio (VIS Priorizada)",
+        reason: "Califica",
+      };
+    }
+    if (ptype === "Departamento" && price <= 70000) {
+      candidate = {
+        applies: true,
+        bonus: 53350,
+        label: "Techo Propio (VIS Priorizada)",
+        reason: "Califica",
+      };
+    }
+  }
+
+  // VIS
+  if (!candidate.applies) {
+    // Filtro 5: tope de ingresos VIS
+    if (income > 3715) {
+      return {
+        applies: false,
+        bonus: 0,
+        label: "No aplica",
+        reason: "Ingreso > 3,715",
+      };
+    }
+
+    if (ptype === "Casa" && price <= 109000) {
+      candidate = {
+        applies: true,
+        bonus: 52250,
+        label: "Techo Propio (VIS)",
+        reason: "Califica",
+      };
+    }
+    if (ptype === "Departamento" && price <= 136000) {
+      candidate = {
+        applies: true,
+        bonus: 47850,
+        label: "Techo Propio (VIS)",
+        reason: "Califica",
+      };
+    }
+  }
+
+  // Filtro 6: el bono no puede “pasarse” del neto a financiar
+  if (candidate.applies) {
+    const financed = price - init - candidate.bonus;
+    if (financed <= 0) {
+      return {
+        applies: false,
+        bonus: 0,
+        label: "No aplica",
+        reason:
+          "El valor de la vivienda (menos cuota inicial) no puede ser menor o igual al bono.",
+      };
+    }
+  }
+
+  return candidate;
+}
 
 export default function SimulatePage() {
   const router = useRouter();
@@ -63,8 +193,13 @@ export default function SimulatePage() {
   const [gastosAdmin, setGastosAdmin] = useState("");
 
   const [cok, setCok] = useState("12");
-  const [applyBono, setApplyBono] = useState(false);
-  const [bonusAmount, setBonusAmount] = useState("");
+
+  const [bono, setBono] = useState<BonoAuto>({
+    applies: false,
+    bonus: 0,
+    label: "No aplica",
+    reason: "Selecciona cliente e inmueble.",
+  });
 
   const [results, setResults] = useState<SimResults | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,11 +209,20 @@ export default function SimulatePage() {
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+  const propData = useMemo(
+    () => properties.find((p) => p.id === selectedProperty),
+    [properties, selectedProperty],
+  );
+  const entityData = useMemo(
+    () => entities.find((e) => e.id === selectedEntity),
+    [entities, selectedEntity],
+  );
+  const clientData = useMemo(
+    () => clients.find((c) => c.id === selectedClient),
+    [clients, selectedClient],
+  );
 
-  async function loadAll() {
+  const loadAll = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
     const uid = u.user?.id ?? null;
     setUserId(uid);
@@ -87,23 +231,27 @@ export default function SimulatePage() {
     const [{ data: cls }, { data: props }, { data: ents }] = await Promise.all([
       supabase
         .from("clients")
-        .select("id,names,last_names,dni")
+        .select("id,names,last_names,dni,monthly_income,dependents")
         .eq("user_id", uid)
         .order("names"),
       supabase
         .from("properties")
-        .select("id,name,price,currency,initial_payment,location")
+        .select("id,name,price,currency,initial_payment,location,property_type")
         .eq("user_id", uid)
         .order("name"),
       supabase.from("financial_entities").select("id,name").order("name"),
     ]);
 
-    if (cls) setClients(cls as Client[]);
-    if (props) setProperties(props as Property[]);
-    if (ents) setEntities(ents as Entity[]);
-  }
+    setClients((cls ?? []) as Client[]);
+    setProperties((props ?? []) as Property[]);
+    setEntities((ents ?? []) as Entity[]);
+  }, []);
 
-  async function onEntityChange(entityId: number | "") {
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+
+  const onEntityChange = useCallback(async (entityId: number | "") => {
     setSelectedEntity(entityId);
     setBankLoaded(false);
 
@@ -118,25 +266,26 @@ export default function SimulatePage() {
 
     setBankLoading(true);
 
-    const { data: rp } = await supabase
-      .from("rate_plans")
-      .select("rate_type, annual_rate, capitalization_per_year")
-      .eq("entity_id", entityId)
-      .eq("currency", "PEN")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const { data: bc } = await supabase
-      .from("bank_conditions")
-      .select(
-        "desgravamen_monthly_rate, property_insurance_annual_rate, monthly_fees_fixed",
-      )
-      .eq("entity_id", entityId)
-      .eq("currency", "PEN")
-      .eq("is_active", true)
-      .maybeSingle();
+    const [{ data: rp }, { data: bc }] = await Promise.all([
+      supabase
+        .from("rate_plans")
+        .select("rate_type, annual_rate, capitalization_per_year")
+        .eq("entity_id", entityId)
+        .eq("currency", "PEN")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("bank_conditions")
+        .select(
+          "desgravamen_monthly_rate, property_insurance_annual_rate, monthly_fees_fixed",
+        )
+        .eq("entity_id", entityId)
+        .eq("currency", "PEN")
+        .eq("is_active", true)
+        .maybeSingle(),
+    ]);
 
     if (rp) {
       setRateType(rp.rate_type as "TEA" | "TNA");
@@ -154,22 +303,70 @@ export default function SimulatePage() {
 
     setBankLoading(false);
     if (rp || bc) setBankLoaded(true);
-  }
+  }, []);
 
-  const propData = useMemo(
-    () => properties.find((p) => p.id === selectedProperty),
-    [properties, selectedProperty],
-  );
-  const entityData = useMemo(
-    () => entities.find((e) => e.id === selectedEntity),
-    [entities, selectedEntity],
-  );
-  const clientData = useMemo(
-    () => clients.find((c) => c.id === selectedClient),
-    [clients, selectedClient],
-  );
+  // Cache simple de FX (evita pedir tipo de cambio cada vez que cambias selects)
+  const fxCacheRef = useRef<number | null>(null);
+  const getUsdPenRate = useCallback(async () => {
+    if (fxCacheRef.current && fxCacheRef.current > 0) return fxCacheRef.current;
 
-  async function runSimulation() {
+    const { data: fx } = await supabase
+      .from("exchange_rates")
+      .select("rate")
+      .eq("currency_from", "USD")
+      .eq("currency_to", "PEN")
+      .eq("is_active", true)
+      .maybeSingle();
+
+    const rate = Number(fx?.rate) || 3.75;
+    fxCacheRef.current = rate;
+    return rate;
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function run() {
+      if (!clientData || !propData) {
+        if (!alive) return;
+        setBono({
+          applies: false,
+          bonus: 0,
+          label: "No aplica",
+          reason: "Selecciona cliente e inmueble.",
+        });
+        return;
+      }
+
+      const fxRate = propData.currency === "USD" ? await getUsdPenRate() : 1;
+
+      const pricePEN =
+        propData.currency === "USD" ? propData.price * fxRate : propData.price;
+
+      const initPEN =
+        propData.currency === "USD"
+          ? propData.initial_payment * fxRate
+          : propData.initial_payment;
+
+      const r = calcTechoPropioAVN({
+        monthlyIncome: Number(clientData.monthly_income) || 0,
+        dependents: Number(clientData.dependents) || 0,
+        propertyType: String(propData.property_type || ""),
+        pricePEN,
+        initialPEN: initPEN,
+      });
+
+      if (!alive) return;
+      setBono(r);
+    }
+
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [clientData, propData, getUsdPenRate]);
+
+  const runSimulation = useCallback(async () => {
     setError(null);
     setSaved(false);
     setResults(null);
@@ -183,6 +380,9 @@ export default function SimulatePage() {
     const prop = properties.find((p) => p.id === selectedProperty);
     if (!prop) return setError("No se encontró la propiedad seleccionada.");
 
+    const client = clients.find((c) => c.id === selectedClient);
+    if (!client) return setError("No se encontró el cliente seleccionado.");
+
     const rate = Number(annualRate) / 100;
     if (!Number.isFinite(rate) || rate <= 0)
       return setError("La tasa debe ser mayor a 0.");
@@ -190,6 +390,9 @@ export default function SimulatePage() {
     const cokA = Number(cok) / 100;
     if (!Number.isFinite(cokA) || cokA <= 0)
       return setError("El COK debe ser mayor a 0.");
+
+    if (graceTotalMonths + gracePartialMonths > 6)
+      return setError("Los meses de gracia no pueden superar los 6 meses.");
 
     const totalMonths = termYears * 12;
     const gT = Math.max(0, graceTotalMonths);
@@ -204,21 +407,13 @@ export default function SimulatePage() {
     let initPEN = prop.initial_payment;
 
     if (prop.currency === "USD") {
-      const { data: fx } = await supabase
-        .from("exchange_rates")
-        .select("rate")
-        .eq("currency_from", "USD")
-        .eq("currency_to", "PEN")
-        .eq("is_active", true)
-        .maybeSingle();
-
-      fxRate = Number(fx?.rate) || 3.75;
+      fxRate = await getUsdPenRate();
       pricePEN = prop.price * fxRate;
       initPEN = prop.initial_payment * fxRate;
     }
 
-    const bonus = applyBono ? Number(bonusAmount) || 0 : 0;
-    const bonusPEN = prop.currency === "USD" ? bonus * fxRate : bonus;
+    // Bono automático (siempre en PEN en tu lógica)
+    const bonusPEN = bono.applies ? bono.bonus : 0;
 
     const tem = calcTEM(rateType, rate, capPerYear);
 
@@ -258,13 +453,8 @@ export default function SimulatePage() {
 
     const cashflows = schedule.map((r) => r.cashflow);
 
-    // ✅ NUEVO: TIR MENSUAL (la del Excel del profe: "TIR periodo")
     const tirM = calcTIR(principal, cashflows);
-
-    // ✅ NUEVO: anualización (si quieres seguir mostrando “TIR anual” aparte)
     const tirA = tirM > 0 ? Math.pow(1 + tirM, 12) - 1 : -1;
-
-    // TCEA (en tu caso lo estás tratando como anualización de la IRR mensual)
     const tcea = tirA;
 
     const cokM = Math.pow(1 + cokA, 1 / 12) - 1;
@@ -277,13 +467,8 @@ export default function SimulatePage() {
       tem,
       tcea,
       van,
-      
-      // ✅ NUEVO: para que calce con el Excel del profe
-      tirM: tirM, // <- “TIR periodo” (mensual)
-
-      // opcional: si quieres seguir teniendo “TIR anual”
-      tirA: tirA, // <- anualizada
-
+      tirM,
+      tirA,
       schedule,
       principal,
       annualRate: rate,
@@ -340,10 +525,7 @@ export default function SimulatePage() {
           grace_months: gT > 0 ? gT : gP,
           tcea: tcea > 0 ? tcea : null,
           van,
-
-          // aquí puedes guardar la anual o la mensual (lo ideal: guarda ambas en columnas separadas si quieres)
           tir: tirA > 0 ? tirA : null,
-
           desgravamen_monthly_rate_used: desRate,
           property_insurance_annual_rate_used: insRate,
           monthly_fees_fixed_used: portesTotal,
@@ -377,7 +559,34 @@ export default function SimulatePage() {
     } catch (e) {
       console.error(e);
     }
-  }
+  }, [
+    annualRate,
+    bono.applies,
+    bono.bonus,
+    capPerYear,
+    clients,
+    cok,
+    comisionActivacion,
+    comisionEstudio,
+    comisionPeriodica,
+    costoNotarial,
+    costoRegistral,
+    desgravamen,
+    gastosAdmin,
+    gracePartialMonths,
+    graceTotalMonths,
+    properties,
+    propInsurance,
+    portesMensual,
+    rateType,
+    selectedClient,
+    selectedEntity,
+    selectedProperty,
+    tasacion,
+    termYears,
+    userId,
+    getUsdPenRate,
+  ]);
 
   return (
     <div className="h-[calc(100vh-120px)] overflow-y-auto">
@@ -455,20 +664,14 @@ export default function SimulatePage() {
                   label="Precio"
                   value={`${propData.currency === "USD" ? "$" : "S/"} ${new Intl.NumberFormat(
                     "es-PE",
-                    {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    },
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
                   ).format(propData.price)}`}
                 />
                 <Chip
                   label="Cuota inicial"
                   value={`${propData.currency === "USD" ? "$" : "S/"} ${new Intl.NumberFormat(
                     "es-PE",
-                    {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    },
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
                   ).format(propData.initial_payment)}`}
                 />
                 <Chip label="Moneda" value={propData.currency} />
@@ -761,43 +964,16 @@ export default function SimulatePage() {
                 />
               </Field>
 
-              <Field label="¿Aplica Bono Techo Propio / BBP?">
-                <div className="mt-1 flex items-center gap-4">
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="bono"
-                      checked={!applyBono}
-                      onChange={() => setApplyBono(false)}
-                      className="accent-green-600"
-                    />
-                    <span className="text-sm text-slate-700">No aplica</span>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="bono"
-                      checked={applyBono}
-                      onChange={() => setApplyBono(true)}
-                      className="accent-green-600"
-                    />
-                    <span className="text-sm text-slate-700">Sí aplica</span>
-                  </label>
+              <Field label="Bono Techo Propio">
+                <div className="mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                  <div className="font-medium">
+                    {bono.applies
+                      ? `${bono.label} — S/ ${bono.bonus.toLocaleString("es-PE")}`
+                      : "No aplica"}
+                  </div>
+                  <div className="text-xs text-slate-500">{bono.reason}</div>
                 </div>
               </Field>
-
-              {applyBono && (
-                <Field label="Monto del Bono (S/)">
-                  <input
-                    type="number"
-                    min="0"
-                    value={bonusAmount}
-                    onChange={(e) => setBonusAmount(e.target.value)}
-                    className={inp}
-                    placeholder="Ej: 20000"
-                  />
-                </Field>
-              )}
             </div>
           </Section>
 
