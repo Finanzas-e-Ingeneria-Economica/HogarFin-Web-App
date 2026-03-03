@@ -4,18 +4,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import {
-  Users,
-  Building2,
-  Calculator,
-  TrendingUp,
-  ArrowRight,
-  Clock,
-  DollarSign,
-  BarChart3,
-  CheckCircle2,
-  AlertCircle,
-  HomeIcon,
-  Zap,
+  Users, Building2, Calculator, TrendingUp,
+  ArrowRight, Clock, DollarSign, BarChart3,
+  CheckCircle2, AlertCircle, HomeIcon, Zap,
 } from "lucide-react";
 
 type Stat = { clients: number; properties: number; simulations: number };
@@ -40,16 +31,12 @@ type RecentSim = {
 const fmt = (v: number) =>
   `S/ ${new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)}`;
 const fmtPs = (v: number) => `${(v * 100).toFixed(2)}%`;
-const fmtP = (v: number) => `${(v * 100).toFixed(4)}%`;
+const fmtP  = (v: number) => `${(v * 100).toFixed(4)}%`;
 
 export default function BoardPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("Usuario");
-  const [stats, setStats] = useState<Stat>({
-    clients: 0,
-    properties: 0,
-    simulations: 0,
-  });
+  const [stats, setStats] = useState<Stat>({ clients: 0, properties: 0, simulations: 0 });
   const [recentSims, setRecentSims] = useState<RecentSim[]>([]);
   const [loading, setLoading] = useState(true);
   const [hour, setHour] = useState(new Date().getHours());
@@ -64,10 +51,8 @@ export default function BoardPage() {
     const uid = u.user?.id;
     if (!uid) return;
 
-    const first = u.user?.user_metadata?.first_name || "";
-    const last = u.user?.user_metadata?.last_name || "";
-    const displayName = (first + " " + last).trim() || u.user?.email || "Usuario";
-    setDisplayName(displayName);
+    const email = u.user?.email ?? "";
+    setDisplayName(email.split("@")[0]);
 
     const [
       { count: clientCount },
@@ -75,29 +60,18 @@ export default function BoardPage() {
       { count: simCount },
       { data: sims },
     ] = await Promise.all([
-      supabase
-        .from("clients")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", uid),
-      supabase
-        .from("properties")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", uid),
+      supabase.from("clients").select("*", { count: "exact", head: true }).eq("user_id", uid),
+      supabase.from("properties").select("*", { count: "exact", head: true }).eq("user_id", uid),
+      supabase.from("loan_simulations").select("*", { count: "exact", head: true }).eq("user_id", uid),
       supabase
         .from("loan_simulations")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", uid),
-      supabase
-        .from("loan_simulations")
-        .select(
-          `
+        .select(`
           id, created_at, principal, monthly_payment, monthly_rate,
           tcea, van, term_months, grace_type, annual_rate_used, rate_type_used,
           clients(names, last_names),
           properties(name),
           financial_entities(name)
-        `,
-        )
+        `)
         .eq("user_id", uid)
         .order("created_at", { ascending: false })
         .limit(5),
@@ -108,31 +82,25 @@ export default function BoardPage() {
       properties: propCount ?? 0,
       simulations: simCount ?? 0,
     });
-    if (sims) setRecentSims(sims as RecentSim[]);
+    if (sims) setRecentSims(sims as unknown as RecentSim[]);
     setLoading(false);
   }
 
-  const greeting =
-    hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
+  const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
 
   const dateStr = (d: string) =>
-    new Date(d).toLocaleDateString("es-PE", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    new Date(d).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <div className="h-[calc(100vh-120px)] overflow-y-auto">
       <div className="mx-auto w-full max-w-[1100px] px-4 pb-10 pt-6 space-y-6">
+
         {/* Saludo */}
         <div className="rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-5 text-white shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-green-100">{greeting},</p>
-              <h1 className="mt-0.5 text-2xl font-bold capitalize">
-                {displayName}{" "}
-              </h1>
+              <h1 className="mt-0.5 text-2xl font-bold capitalize">{displayName} </h1>
               <p className="mt-1 text-sm text-green-100">
                 Bienvenido a HogarFin — Crédito MiVivienda
               </p>
@@ -173,9 +141,7 @@ export default function BoardPage() {
 
         {/* Accesos rápidos */}
         <div>
-          <h2 className="mb-3 text-sm font-semibold text-slate-700">
-            Accesos rápidos
-          </h2>
+          <h2 className="mb-3 text-sm font-semibold text-slate-700">Accesos rápidos</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <QuickAction
               icon={<Users className="h-4 w-4" />}
@@ -204,9 +170,7 @@ export default function BoardPage() {
         {/* Simulaciones recientes */}
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700">
-              Simulaciones recientes
-            </h2>
+            <h2 className="text-sm font-semibold text-slate-700">Simulaciones recientes</h2>
             {stats.simulations > 5 && (
               <button
                 onClick={() => router.push("/dashboard/simulate/history")}
@@ -219,11 +183,8 @@ export default function BoardPage() {
 
           {loading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-20 animate-pulse rounded-2xl bg-slate-100"
-                />
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
               ))}
             </div>
           ) : recentSims.length === 0 ? (
@@ -239,7 +200,7 @@ export default function BoardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentSims.map((sim) => (
+              {recentSims.map(sim => (
                 <div
                   key={sim.id}
                   className="rounded-2xl border border-slate-200 bg-white/70 px-5 py-4 shadow-sm backdrop-blur hover:shadow-md transition cursor-pointer"
@@ -248,9 +209,7 @@ export default function BoardPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        <span className="text-xs font-mono text-slate-400">
-                          #{sim.id}
-                        </span>
+                        <span className="text-xs font-mono text-slate-400">#{sim.id}</span>
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                           {sim.financial_entities?.name ?? "—"}
                         </span>
@@ -259,48 +218,30 @@ export default function BoardPage() {
                             Gracia
                           </span>
                         )}
-                        <span className="text-xs text-slate-400">
-                          {dateStr(sim.created_at)}
-                        </span>
+                        <span className="text-xs text-slate-400">{dateStr(sim.created_at)}</span>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
                         <span className="font-medium text-slate-900">
-                          {sim.clients
-                            ? `${sim.clients.names} ${sim.clients.last_names}`
-                            : "—"}
+                          {sim.clients ? `${sim.clients.names} ${sim.clients.last_names}` : "—"}
                         </span>
                         <span className="text-slate-400">·</span>
                         <span>{sim.properties?.name ?? "—"}</span>
                         <span className="text-slate-400">·</span>
-                        <span>
-                          {sim.rate_type_used}{" "}
-                          {((sim.annual_rate_used ?? 0) * 100).toFixed(2)}% ·{" "}
-                          {sim.term_months / 12} años
-                        </span>
+                        <span>{sim.rate_type_used} {((sim.annual_rate_used ?? 0) * 100).toFixed(2)}% · {sim.term_months / 12} años</span>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 sm:flex-col sm:items-end sm:gap-1">
-                      <span className="text-sm font-bold text-slate-900">
-                        {fmt(sim.principal)}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        Cuota: {fmt(sim.monthly_payment)}
-                      </span>
+                      <span className="text-sm font-bold text-slate-900">{fmt(sim.principal)}</span>
+                      <span className="text-xs text-slate-500">Cuota: {fmt(sim.monthly_payment)}</span>
                       <div className="flex gap-2">
-                        <span className="text-xs text-slate-500">
-                          TEM: {fmtP(sim.monthly_rate)}
-                        </span>
+                        <span className="text-xs text-slate-500">TEM: {fmtP(sim.monthly_rate)}</span>
                         {sim.tcea != null && (
-                          <span className="text-xs text-violet-600">
-                            TCEA: {fmtPs(sim.tcea)}
-                          </span>
+                          <span className="text-xs text-violet-600">TCEA: {fmtPs(sim.tcea)}</span>
                         )}
                         {sim.van != null && (
-                          <span
-                            className={`text-xs font-medium ${sim.van >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                          >
+                          <span className={`text-xs font-medium ${sim.van >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                             VAN: {fmt(sim.van)}
                           </span>
                         )}
@@ -316,9 +257,7 @@ export default function BoardPage() {
         {/* Estado del sistema */}
         {!loading && (
           <div className="rounded-2xl border border-slate-200 bg-white/70 px-5 py-4 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-slate-700">
-              Estado del sistema
-            </h2>
+            <h2 className="mb-3 text-sm font-semibold text-slate-700">Estado del sistema</h2>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <StatusRow
                 icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
@@ -327,40 +266,21 @@ export default function BoardPage() {
                 ok
               />
               <StatusRow
-                icon={
-                  stats.clients > 0 ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                  )
-                }
+                icon={stats.clients > 0 ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertCircle className="h-4 w-4 text-amber-500" />}
                 label="Clientes"
-                status={
-                  stats.clients > 0
-                    ? `${stats.clients} registrado${stats.clients !== 1 ? "s" : ""}`
-                    : "Sin clientes aún"
-                }
+                status={stats.clients > 0 ? `${stats.clients} registrado${stats.clients !== 1 ? "s" : ""}` : "Sin clientes aún"}
                 ok={stats.clients > 0}
               />
               <StatusRow
-                icon={
-                  stats.properties > 0 ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                  )
-                }
+                icon={stats.properties > 0 ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertCircle className="h-4 w-4 text-amber-500" />}
                 label="Inmuebles"
-                status={
-                  stats.properties > 0
-                    ? `${stats.properties} cargado${stats.properties !== 1 ? "s" : ""}`
-                    : "Sin inmuebles aún"
-                }
+                status={stats.properties > 0 ? `${stats.properties} cargado${stats.properties !== 1 ? "s" : ""}` : "Sin inmuebles aún"}
                 ok={stats.properties > 0}
               />
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
@@ -368,29 +288,18 @@ export default function BoardPage() {
 
 // ── Sub-componentes ──
 
-function StatCard({
-  icon,
-  label,
-  value,
-  sub,
-  color,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub: string;
-  color: "green" | "blue" | "purple";
-  onClick: () => void;
+function StatCard({ icon, label, value, sub, color, onClick }: {
+  icon: React.ReactNode; label: string; value: string;
+  sub: string; color: "green" | "blue" | "purple"; onClick: () => void;
 }) {
   const colors = {
-    green: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    blue: "bg-sky-50 text-sky-700 ring-sky-200",
+    green:  "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    blue:   "bg-sky-50 text-sky-700 ring-sky-200",
     purple: "bg-violet-50 text-violet-700 ring-violet-200",
   };
   const iconColors = {
-    green: "bg-emerald-100 text-emerald-700",
-    blue: "bg-sky-100 text-sky-700",
+    green:  "bg-emerald-100 text-emerald-700",
+    blue:   "bg-sky-100 text-sky-700",
     purple: "bg-violet-100 text-violet-700",
   };
   return (
@@ -398,9 +307,7 @@ function StatCard({
       onClick={onClick}
       className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white/70 px-5 py-4 shadow-sm backdrop-blur hover:shadow-md transition text-left w-full"
     >
-      <div
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconColors[color]}`}
-      >
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconColors[color]}`}>
         {icon}
       </div>
       <div className="min-w-0">
@@ -413,16 +320,8 @@ function StatCard({
   );
 }
 
-function QuickAction({
-  icon,
-  label,
-  onClick,
-  primary,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  primary?: boolean;
+function QuickAction({ icon, label, onClick, primary }: {
+  icon: React.ReactNode; label: string; onClick: () => void; primary?: boolean;
 }) {
   return (
     <button
@@ -439,25 +338,15 @@ function QuickAction({
   );
 }
 
-function StatusRow({
-  icon,
-  label,
-  status,
-  ok,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  status: string;
-  ok: boolean;
+function StatusRow({ icon, label, status, ok }: {
+  icon: React.ReactNode; label: string; status: string; ok: boolean;
 }) {
   return (
     <div className="flex items-center gap-3">
       {icon}
       <div className="text-xs">
         <span className="font-medium text-slate-700">{label}: </span>
-        <span className={ok ? "text-emerald-600" : "text-amber-600"}>
-          {status}
-        </span>
+        <span className={ok ? "text-emerald-600" : "text-amber-600"}>{status}</span>
       </div>
     </div>
   );

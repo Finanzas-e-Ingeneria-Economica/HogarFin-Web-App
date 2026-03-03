@@ -67,7 +67,7 @@ export default function HistoryPage() {
       .eq("user_id", u.user.id)
       .order("created_at", { ascending: false });
 
-    if (data) setSims(data as Simulation[]);
+    if (data) setSims(data as unknown as Simulation[]);
     setLoading(false);
   }
 
