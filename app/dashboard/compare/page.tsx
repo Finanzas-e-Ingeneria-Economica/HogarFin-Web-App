@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { GitCompare, X, Trophy, TrendingUp, BarChart3, AlertCircle } from "lucide-react";
 import {
@@ -385,14 +385,14 @@ export default function ComparadorPage() {
                       <Tooltip formatter={(v: any) => fmtS(v)} labelFormatter={l => `Período ${l}`} />
                       <Legend verticalAlign="top" height={36} />
                       {simsData.map((sim, idx) => (
-                        <>
+                        <React.Fragment key={sim.id}>
                           <Line key={`i${sim.id}`} type="monotone" dataKey={`interes_${idx}`}
                             name={`${sim.bank} - Interés`} stroke={COLORS[idx]}
                             strokeWidth={1.5} strokeDasharray="5 5" dot={false} connectNulls />
                           <Line key={`a${sim.id}`} type="monotone" dataKey={`amort_${idx}`}
                             name={`${sim.bank} - Amort.`} stroke={COLORS[idx]}
                             strokeWidth={2.5} dot={false} connectNulls />
-                        </>
+                       = </React.Fragment>
                       ))}
                     </LineChart>
                   </ResponsiveContainer>

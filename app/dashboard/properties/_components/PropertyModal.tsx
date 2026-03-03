@@ -17,7 +17,9 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onSave: (
-    payload: Omit<PropertyRow, "id" | "created_at" | "updated_at"> & { id?: number },
+    payload: Omit<PropertyRow, "id" | "created_at" | "updated_at"> & {
+      id?: number;
+    },
   ) => Promise<void>;
   saving: boolean;
   initial: PropertyRow | null;
@@ -58,7 +60,9 @@ export default function PropertyModal({
       currency: initial?.currency ?? "PEN",
       price: initial?.price !== undefined ? String(initial.price) : "",
       initial_payment:
-        initial && initial.initial_payment !== null && initial.initial_payment !== undefined
+        initial &&
+        initial.initial_payment !== null &&
+        initial.initial_payment !== undefined
           ? String(initial.initial_payment)
           : "",
       area_m2: initial?.area_m2 !== undefined ? String(initial.area_m2) : "",
@@ -77,7 +81,8 @@ export default function PropertyModal({
 
   if (!open) return null;
 
-  const set = (k: keyof FormState, v: any) => setForm((s) => ({ ...s, [k]: v }));
+  const set = (k: keyof FormState, v: any) =>
+    setForm((s) => ({ ...s, [k]: v }));
 
   const validate = () => {
     if (!userId) return "No se encontró usuario autenticado";
@@ -94,17 +99,33 @@ export default function PropertyModal({
     const priceStr = form.price.trim();
     if (!priceStr) return "El precio es obligatorio";
     const price = Number(priceStr);
-    if (!Number.isFinite(price) || price <= 0) return "El precio debe ser un número > 0";
+    if (!Number.isFinite(price) || price <= 0)
+      return "El precio debe ser un número > 0";
 
     const initStr = form.initial_payment.trim();
     const init = initStr === "" ? 0 : Number(initStr);
-    if (!Number.isFinite(init) || init < 0) return "La cuota inicial debe ser un número >= 0";
-    if (init > price) return "La cuota inicial no puede ser mayor que el precio";
+    if (!Number.isFinite(init) || init < 0)
+      return "La cuota inicial debe ser un número >= 0";
+    if (init > price)
+      return "La cuota inicial no puede ser mayor que el precio";
+
+    const minInit = price * 0.1;
+    const maxInit = price * 0.3;
+    const pct = price > 0 ? (init / price) * 100 : 0;
+
+    if (init < minInit) {
+      return `La cuota inicial (${pct.toFixed(2)}%) es menor al mínimo permitido (10%) para el Nuevo Crédito MiVivienda.`;
+    }
+
+    if (init > maxInit) {
+      return `La cuota inicial (${pct.toFixed(2)}%) supera el máximo permitido (30%) para el Nuevo Crédito MiVivienda.`;
+    }
 
     const areaStr = form.area_m2.trim();
     if (!areaStr) return "El área (m²) es obligatoria";
     const area = Number(areaStr);
-    if (!Number.isFinite(area) || area <= 0) return "El área (m²) debe ser un número > 0";
+    if (!Number.isFinite(area) || area <= 0)
+      return "El área (m²) debe ser un número > 0";
 
     const currency = form.currency;
     if (currency !== "PEN" && currency !== "USD") return "Moneda inválida";
@@ -128,7 +149,8 @@ export default function PropertyModal({
       property_type: form.property_type,
       currency: form.currency,
       price: Number(form.price),
-      initial_payment: form.initial_payment.trim() === "" ? 0 : Number(form.initial_payment),
+      initial_payment:
+        form.initial_payment.trim() === "" ? 0 : Number(form.initial_payment),
       area_m2: Number(form.area_m2),
       location: form.location.trim(),
     });
@@ -144,7 +166,9 @@ export default function PropertyModal({
       <div className="relative w-[95vw] max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
-            <div className="text-base font-semibold text-slate-900">{title}</div>
+            <div className="text-base font-semibold text-slate-900">
+              {title}
+            </div>
             <div className="text-xs text-slate-500">
               Completa todos los campos para guardar la propiedad.
             </div>
@@ -192,7 +216,9 @@ export default function PropertyModal({
             <Field label="Moneda">
               <select
                 value={form.currency}
-                onChange={(e) => set("currency", e.target.value as "PEN" | "USD")}
+                onChange={(e) =>
+                  set("currency", e.target.value as "PEN" | "USD")
+                }
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
               >
                 <option value="PEN">PEN (S/)</option>
@@ -213,7 +239,9 @@ export default function PropertyModal({
             <Field label="Cuota inicial">
               <input
                 value={formatWithCommas(form.initial_payment)}
-                onChange={(e) => set("initial_payment", sanitizeDecimal(e.target.value))}
+                onChange={(e) =>
+                  set("initial_payment", sanitizeDecimal(e.target.value))
+                }
                 inputMode="decimal"
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Ej: 10,000"
@@ -223,7 +251,9 @@ export default function PropertyModal({
             <Field label="Área (m²)">
               <input
                 value={formatWithCommas(form.area_m2)}
-                onChange={(e) => set("area_m2", sanitizeDecimal(e.target.value))}
+                onChange={(e) =>
+                  set("area_m2", sanitizeDecimal(e.target.value))
+                }
                 inputMode="decimal"
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
                 placeholder="Ej: 65.5"
