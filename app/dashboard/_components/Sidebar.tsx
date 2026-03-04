@@ -14,6 +14,7 @@ import {
   X,
   History,
   GitCompare,
+  BookOpen,
 } from "lucide-react";
 
 const nav = [
@@ -23,6 +24,7 @@ const nav = [
   { href: "/dashboard/simulate",         label: "Nueva Simulación", icon: Calculator },
   { href: "/dashboard/simulate/history", label: "Historial",        icon: History },
   { href: "/dashboard/compare",          label: "Comparador",       icon: GitCompare },
+  { href: "/dashboard/guide",            label: "Guía",             icon: BookOpen },
 ];
 
 function cn(...classes: (string | boolean | undefined)[]) {
