@@ -14,6 +14,7 @@ import {
   X,
   History,
   GitCompare,
+  HelpCircle
 } from "lucide-react";
 
 const nav = [
@@ -23,6 +24,7 @@ const nav = [
   { href: "/dashboard/simulate",         label: "Nueva Simulación", icon: Calculator },
   { href: "/dashboard/simulate/history", label: "Historial",        icon: History },
   { href: "/dashboard/compare",          label: "Comparador",       icon: GitCompare },
+  { href: "/dashboard/help",             label: "Ayuda",            icon: HelpCircle }, // <--- AGREGA ESTA LÍNEA
 ];
 
 function cn(...classes: (string | boolean | undefined)[]) {
