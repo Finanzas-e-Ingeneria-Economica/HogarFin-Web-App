@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import {
   History, Search, Eye, Trash2, Building2, User,
-  Calendar, TrendingUp, DollarSign, ChevronDown, ChevronUp,
+  Calendar, TrendingUp, ChevronDown, ChevronUp,
   AlertCircle, Clock, FileSpreadsheet, Download,
 } from "lucide-react";
 import { fmt, fmtPs, fmtP, n2 } from "../_utils/format";

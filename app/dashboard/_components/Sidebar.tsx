@@ -66,8 +66,6 @@ export default function Sidebar({
       <nav className="px-3 py-4 space-y-1">
         {nav.map((item) => {
           const Icon = item.icon;
-          // Para simulate, solo marcar activo si es exactamente /dashboard/simulate
-          // (no cuando estamos en /history o /compare)
           const active =
             item.href === "/dashboard/simulate"
               ? pathname === "/dashboard/simulate"
@@ -100,7 +98,6 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Cuenta al fondo */}
       <div className="mt-auto border-t border-zinc-200 px-5 py-4">
         <div className="text-xs font-medium uppercase tracking-wider text-zinc-500">Cuenta</div>
 

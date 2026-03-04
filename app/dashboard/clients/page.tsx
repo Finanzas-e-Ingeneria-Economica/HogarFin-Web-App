@@ -5,7 +5,6 @@ import ClientCard from "./_components/ClientCard";
 import ClientModal from "./_components/ClientModal";
 import DeleteClientModal from "./_components/DeleteClientModal";
 import { supabase } from "@/lib/supabaseClient";
-import { FileText } from "lucide-react";
 
 export type ClientRow = {
   id: number;
@@ -35,11 +34,7 @@ const money = (v: number | null | undefined) => {
   }).format(v);
 };
 
-// ─────────────────────────────────────────────────────────────
-// FICHA PDF
-// ─────────────────────────────────────────────────────────────
 async function generarFichaCliente(client: ClientRow) {
-  // Traer la simulación más reciente del cliente junto con sus datos
   const { data: simsRaw } = await supabase
     .from("loan_simulations")
     .select(
@@ -51,7 +46,6 @@ async function generarFichaCliente(client: ClientRow) {
 
   const sim = simsRaw?.[0] as any ?? null;
 
-  // Traer cronograma si hay simulación
   let rows: any[] = [];
   if (sim) {
     const { data: rowsRaw } = await supabase
@@ -212,9 +206,6 @@ ${simSection}
   setTimeout(() => w.print(), 700);
 }
 
-// ─────────────────────────────────────────────────────────────
-// PÁGINA PRINCIPAL
-// ─────────────────────────────────────────────────────────────
 export default function ClientsPage() {
   const [userId,     setUserId]     = useState<string | null>(null);
   const [clients,    setClients]    = useState<ClientRow[]>([]);
