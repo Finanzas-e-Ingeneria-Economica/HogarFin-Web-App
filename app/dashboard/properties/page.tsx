@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { HomeIcon } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
 import PropertyCard from "./_components/PropertyCard";
 import PropertyModal from "./_components/PropertyModal";
 import DeletePropertyModal from "./_components/DeletePropertyModal";
+import { formatCurrency, formatArea } from "./_utils/formatters";
+import { useProperties } from "./_hooks/useProperties";
 
 export type PropertyRow = {
   id: number;
@@ -22,176 +22,16 @@ export type PropertyRow = {
   updated_at: string;
 };
 
-const formatCurrency = (amount: number, currency: "PEN" | "USD") => {
-  const n = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(
-    amount,
-  );
-  return currency === "USD" ? `$ ${n}` : `S/ ${n}`;
-};
-
-const formatArea = (v: number) =>
-  new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(v);
-
 export default function PropertiesPage() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [properties, setProperties] = useState<PropertyRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<PropertyRow | null>(null);
-
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return properties;
-    return properties.filter((p) => {
-      const hay =
-        `${p.name} ${p.location} ${p.property_type} ${p.currency}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }, [properties, query]);
-
-  const deletingProperty = useMemo(
-    () => properties.find((p) => p.id === deletingId) ?? null,
-    [properties, deletingId],
-  );
-
-  const load = async () => {
-    setLoading(true);
-
-    const { data: userRes } = await supabase.auth.getUser();
-    const uid = userRes.user?.id ?? null;
-    setUserId(uid);
-
-    if (!uid) {
-      setProperties([]);
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("properties")
-      .select(
-        "id,user_id,client_id,name,property_type,currency,price,initial_payment,area_m2,location,created_at,updated_at",
-      )
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) setProperties(data as PropertyRow[]);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  const onNew = () => {
-    setEditing(null);
-    setOpen(true);
-  };
-
-  const onEdit = (p: PropertyRow) => {
-    setEditing(p);
-    setOpen(true);
-  };
-
-  const onClose = () => setOpen(false);
-
-  const askDelete = (id: number) => {
-    setDeletingId(id);
-    setDeleteOpen(true);
-  };
-
-  const cancelDelete = () => {
-    if (busy) return;
-    setDeleteOpen(false);
-    setDeletingId(null);
-  };
-
-  const deleteProperty = async (id: number) => {
-    if (!userId) return false;
-    setBusy(true);
-
-    const { error } = await supabase
-      .from("properties")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", userId);
-
-    if (!error) await load();
-    setBusy(false);
-    return !error;
-  };
-
-  const confirmDelete = async () => {
-    if (deletingId === null) return;
-    const ok = await deleteProperty(deletingId);
-    if (ok) {
-      setDeleteOpen(false);
-      setDeletingId(null);
-    }
-  };
-
-  const upsertProperty = async (
-    payload: Omit<PropertyRow, "id" | "created_at" | "updated_at"> & {
-      id?: number;
-    },
-  ) => {
-    if (!userId) return;
-
-    setBusy(true);
-
-    if (payload.id) {
-      const { error } = await supabase
-        .from("properties")
-        .update({
-          name: payload.name,
-          property_type: payload.property_type,
-          currency: payload.currency,
-          price: payload.price,
-          initial_payment: payload.initial_payment,
-          area_m2: payload.area_m2,
-          location: payload.location,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", payload.id)
-        .eq("user_id", userId);
-
-      if (!error) {
-        await load();
-        setOpen(false);
-      }
-
-      setBusy(false);
-      return;
-    }
-
-    const { error } = await supabase.from("properties").insert({
-      user_id: userId,
-      client_id: null,
-      name: payload.name,
-      property_type: payload.property_type,
-      currency: payload.currency,
-      price: payload.price,
-      initial_payment: payload.initial_payment,
-      area_m2: payload.area_m2,
-      location: payload.location,
-    });
-
-    if (!error) {
-      await load();
-      setOpen(false);
-    }
-
-    setBusy(false);
-  };
+  const {
+    userId, loading, busy,
+    query, setQuery, open, editing, deleteOpen, deletingProperty, filtered,
+    onNew, onEdit, onClose, askDelete, cancelDelete, confirmDelete, upsertProperty
+  } = useProperties();
 
   return (
     <div className="w-full">
+      {/* HEADER */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Propiedades</h1>
@@ -208,6 +48,7 @@ export default function PropertiesPage() {
         </button>
       </div>
 
+      {/* BUSCADOR */}
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="w-full sm:max-w-md">
           <div className="relative">
@@ -233,6 +74,7 @@ export default function PropertiesPage() {
         </div>
       </div>
 
+      {/* LISTA DE PROPIEDADES */}
       <div className="mt-6">
         {loading ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -253,8 +95,7 @@ export default function PropertiesPage() {
                 Aún no tienes propiedades registradas
               </h2>
               <p className="text-sm text-slate-500">
-                Crea tu primera propiedad para luego simular con cualquier
-                cliente.
+                Crea tu primera propiedad para luego simular con cualquier cliente.
               </p>
               <button
                 onClick={onNew}
@@ -281,6 +122,7 @@ export default function PropertiesPage() {
         )}
       </div>
 
+      {/* MODALES */}
       <PropertyModal
         open={open}
         onClose={onClose}
@@ -292,11 +134,7 @@ export default function PropertiesPage() {
 
       <DeletePropertyModal
         open={deleteOpen}
-        title={
-          deletingProperty
-            ? `Eliminar: ${deletingProperty.name}`
-            : "Eliminar propiedad"
-        }
+        title={deletingProperty ? `Eliminar: ${deletingProperty.name}` : "Eliminar propiedad"}
         description="¿Seguro que deseas eliminar esta propiedad? Esta acción no se puede deshacer."
         onCancel={cancelDelete}
         onConfirm={confirmDelete}
