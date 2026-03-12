@@ -8,7 +8,6 @@ import {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
-      {/* 1. Navegación con alto contraste */}
       <nav className="sticky top-0 z-50 bg-white border-b border-slate-200 flex items-center justify-between px-8 py-4 shadow-sm">
         <div className="flex items-center gap-2">
           <div className="bg-emerald-700 p-2 rounded-lg">
@@ -31,7 +30,6 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* 2. Hero Section */}
       <section className="relative px-8 py-24 lg:py-32 max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         <div>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 text-sm font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
@@ -78,7 +76,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. Proceso en 4 Pasos (Corregido) */}
       <section id="proceso" className="py-28 px-8 border-y border-slate-100 bg-slate-50">
         <div className="max-w-7xl mx-auto text-center mb-20">
           <h2 className="text-5xl font-black text-slate-900 mb-6 tracking-tight text-center">Tu flujo de trabajo en 4 pasos</h2>
@@ -114,7 +111,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. Beneficios y Gestión (Corregido Icono) */}
       <section id="beneficios" className="py-28 px-8">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-10">
           <div className="lg:col-span-1">
@@ -156,7 +152,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. FAQ (Corregido) */}
       <section id="faq" className="py-28 px-8 bg-slate-50">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-4xl font-black text-slate-900 mb-4 text-center">Resolviendo tus dudas</h2>
@@ -178,7 +173,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 6. Footer */}
       <footer className="bg-slate-900 text-slate-400 py-16 px-8">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 border-b border-slate-800 pb-12 mb-12">
           <div className="col-span-2 text-left">
@@ -220,8 +214,6 @@ export default function LandingPage() {
     </div>
   );
 }
-
-// --- Componentes con Tipado Correcto ---
 
 interface BigStepProps {
   number: string;

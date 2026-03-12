@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
-  User, Lock, Bell, Shield, Palette, Database,
+  User, Lock, Shield, Palette, Database,
   CheckCircle2, AlertCircle, Eye, EyeOff, Save,
-  Trash2, Download, RefreshCw, DollarSign,
+  Trash2, Download
 } from "lucide-react";
 
 type Tab = "perfil" | "seguridad" | "preferencias" | "datos";
@@ -90,7 +90,6 @@ export default function SettingsPage() {
       role:       meta.role       ?? "",
     });
 
-    // Cargar preferencias guardadas en metadata
     if (meta.preferences) {
       try { setPrefs({ ...prefs, ...JSON.parse(meta.preferences) }); } catch {}
     }
@@ -240,7 +239,7 @@ export default function SettingsPage() {
           {/* Contenido */}
           <div className="flex-1 min-w-0">
 
-            {/* ── PERFIL ── */}
+            {/*  PERFIL  */}
             {tab === "perfil" && (
               <Card title="Información Personal" icon={<User className="h-4 w-4" />}>
                 <div className="space-y-4">
@@ -301,7 +300,7 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {/* ── SEGURIDAD ── */}
+            {/*  SEGURIDAD  */}
             {tab === "seguridad" && (
               <div className="space-y-4">
                 <Card title="Cambiar Contraseña" icon={<Lock className="h-4 w-4" />}>
@@ -386,7 +385,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* ── PREFERENCIAS ── */}
+            {/* PREFERENCIAS */}
             {tab === "preferencias" && (
               <Card title="Preferencias de Simulación" icon={<Palette className="h-4 w-4" />}>
                 <div className="space-y-5">
@@ -447,7 +446,7 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {/* ── MIS DATOS ── */}
+            {/*  MIS DATOS  */}
             {tab === "datos" && (
               <div className="space-y-4">
                 <Card title="Resumen de mis datos" icon={<Database className="h-4 w-4" />}>
@@ -513,7 +512,6 @@ export default function SettingsPage() {
   );
 }
 
-// ── Sub-componentes ──
 function Card({ title, icon, children, danger }: {
   title: string; icon: React.ReactNode; children: React.ReactNode; danger?: boolean;
 }) {

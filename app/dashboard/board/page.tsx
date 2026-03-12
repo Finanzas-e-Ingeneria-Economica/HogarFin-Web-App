@@ -125,7 +125,6 @@ export default function BoardPage() {
   return (
     <div className="h-[calc(100vh-120px)] overflow-y-auto">
       <div className="mx-auto w-full max-w-[1100px] px-4 pb-10 pt-6 space-y-6">
-        {/* Saludo */}
         <div className="rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-5 text-white shadow-md">
           <div className="flex items-center justify-between">
             <div>
@@ -366,7 +365,6 @@ export default function BoardPage() {
   );
 }
 
-// ── Sub-componentes ──
 
 function StatCard({
   icon,

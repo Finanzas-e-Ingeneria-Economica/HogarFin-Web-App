@@ -100,7 +100,6 @@ export default function ClientCard({
           </div>
         </div>
 
-        {/* Botón ficha PDF */}
         <div className="mt-4 border-t border-slate-100 pt-3">
           <button
             onClick={onGeneratePDF}

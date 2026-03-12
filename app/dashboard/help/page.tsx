@@ -1,4 +1,3 @@
-// app/dashboard/help/page.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -6,8 +5,6 @@ import { supabase } from "@/lib/supabaseClient";
 import {
   HelpCircle,
   BookOpen,
-  Calculator,
-  CheckCircle2,
   AlertTriangle,
   Mail,
   TrendingUp,
@@ -17,13 +14,10 @@ import {
   Building2,
   Search,
   FileText,
-  Info,
-  ChevronRight,
   Target,
   ArrowRight
 } from "lucide-react";
 
-// --- Helpers de formato ---
 const fmtMoney = (v: number) => new Intl.NumberFormat("es-PE", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
 const fmtPct = (v: number, digits = 4) => `${(v * 100).toFixed(digits)}%`;
 const toNum = (x: unknown) => {
@@ -43,7 +37,6 @@ function rangeTerm(minM: number, maxM: number) {
   return `${minM}–${maxM} meses (${minY}–${maxY} años)`;
 }
 
-// --- Estilos ---
 const pillBase = "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition shadow-sm";
 const cardStyle = "rounded-2xl border border-slate-200 bg-white/70 shadow-sm backdrop-blur overflow-hidden";
 const th = "whitespace-nowrap px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 bg-slate-50 border-b border-slate-200";
@@ -55,7 +48,6 @@ export default function UnifiedHelpPage() {
   const [conds, setConds] = useState<any[]>([]);
   const [tiers, setTiers] = useState<any[]>([]);
   
-  // Parámetros fijos y dinámicos
   const [price, setPrice] = useState<number>(300000);
   const [termYears, setTermYears] = useState<number>(20);
   const [q, setQ] = useState("");
@@ -82,7 +74,7 @@ export default function UnifiedHelpPage() {
     const entityById = new Map(entities.map(e => [e.id, e.name]));
     const termMonths = termYears * 12;
     const rows = tiers
-      .filter(t => t.currency === "PEN") // Forzado a PEN según tu solicitud
+      .filter(t => t.currency === "PEN")  
       .filter(t => {
         const minP = toNum(t.min_property_value) ?? 0;
         const maxP = toNum(t.max_property_value);
@@ -112,8 +104,6 @@ export default function UnifiedHelpPage() {
   return (
     <div className="h-[calc(100vh-120px)] overflow-y-auto px-4 pb-12 pt-6">
       <div className="mx-auto max-w-6xl space-y-8">
-        
-        {/* Header Unificado */}
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
@@ -135,7 +125,6 @@ export default function UnifiedHelpPage() {
           </div>
         </div>
 
-        {/* CONTENIDO: TECHO PROPIO (Palabras exactas de tu compañero) */}
         {tab === "tp" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-in fade-in slide-in-from-bottom-2">
             <div className={cardStyle + " lg:col-span-2"}>
@@ -223,7 +212,6 @@ export default function UnifiedHelpPage() {
           </div>
         )}
 
-        {/* PESTAÑA: TASAS Y COSTOS (Diseño con Estilo) */}
         {tab === "banks" && (
           <div className={cardStyle + " animate-in fade-in"}>
             <div className="p-6 bg-gradient-to-r from-white to-slate-50 border-b border-slate-200 flex flex-wrap gap-6 items-center justify-between">
@@ -282,7 +270,6 @@ export default function UnifiedHelpPage() {
           </div>
         )}
 
-        {/* PESTAÑA: AYUDA Y GLOSARIO (Completo) */}
         {tab === "glossary" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in">
             <div className="lg:col-span-2 space-y-10">

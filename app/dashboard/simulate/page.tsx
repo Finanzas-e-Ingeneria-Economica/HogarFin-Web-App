@@ -59,7 +59,7 @@ export default function SimulatePage() {
           </div>
         )}
 
-        {/* CONTENEDOR DE LAS SECCIONES (AQUÍ ESTÁ EL FIX VISUAL) */}
+        {/* CONTENEDOR DE LAS SECCIONES */}
         <div className="mt-5 space-y-5">
           <ClientPropertySection
             clients={clients} properties={properties}
@@ -99,7 +99,6 @@ export default function SimulatePage() {
             bonoTP={logic.bonoTP} bonoBBP={logic.bonoBBP}
           />
         </div> 
-        {/* <--- FIN DEL CONTENEDOR (El botón ya no está atrapado aquí adentro) */}
 
         {/* Botón de Calcular */}
         <div className="flex justify-end pb-2 mt-5">

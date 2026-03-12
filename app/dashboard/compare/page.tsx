@@ -8,9 +8,6 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 
-// ─────────────────────────────────────────────
-// TIPOS
-// ─────────────────────────────────────────────
 type SimOption = { id: number; label: string; property: string; created_at: string };
 
 type SimData = {
@@ -22,9 +19,6 @@ type SimData = {
   schedule: { n: number; balance: number; interest: number; amortization: number; total_payment: number }[];
 };
 
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
 const fmtS  = (v: number) => `S/ ${new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)}`;
 const fmtP  = (v: number) => `${(v * 100).toFixed(4)}%`;
 const fmtPs = (v: number) => `${(v * 100).toFixed(2)}%`;
@@ -41,9 +35,7 @@ const BADGE_CLS    = [
 ];
 const DOT_CLS = ["bg-green-600", "bg-blue-600", "bg-purple-600"];
 
-// ─────────────────────────────────────────────
-// COMPONENTE
-// ─────────────────────────────────────────────
+
 export default function ComparadorPage() {
   const [simOptions,   setSimOptions]   = useState<SimOption[]>([]);
   const [numToCompare, setNumToCompare] = useState<number | null>(null);
@@ -122,7 +114,7 @@ export default function ComparadorPage() {
     setLoading(false);
   }
 
-  // ── Métricas ──
+  // Métricas
   const totalInteres  = (s: SimData) => s.schedule.reduce((t, r) => t + (r.interest ?? 0), 0);
   const totalPagado   = (s: SimData) => s.schedule.reduce((t, r) => t + (r.total_payment ?? 0), 0);
   const costoTotal    = (s: SimData) => totalPagado(s) - s.principal;
@@ -178,7 +170,6 @@ export default function ComparadorPage() {
           </p>
         </div>
 
-        {/* PASO 1 — ¿Cuántas? */}
         {!numToCompare && (
           <div className="rounded-2xl border border-slate-200 bg-white/70 shadow-sm p-10 text-center">
             <GitCompare className="mx-auto h-12 w-12 text-slate-300 mb-4" />
@@ -200,7 +191,6 @@ export default function ComparadorPage() {
           </div>
         )}
 
-        {/* PASO 2 — Selectores */}
         {numToCompare && (
           <div className="rounded-2xl border border-slate-200 bg-white/70 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
@@ -271,8 +261,6 @@ export default function ComparadorPage() {
         {/* RESULTADOS */}
         {simsData.length >= 2 && (
           <div className="space-y-6">
-
-            {/* Cabeceras de cada sim */}
             <div className={`grid gap-4 ${simsData.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
               {simsData.map((sim, idx) => (
                 <div key={sim.id} className={`rounded-2xl border-2 ${BORDER_CLS[idx]} ${BG_CLS[idx]} p-4`}>
